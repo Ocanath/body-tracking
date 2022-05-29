@@ -1,0 +1,2 @@
+z = 28 in,
+x-y shoulder dist = 13.5 in
