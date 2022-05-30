@@ -47,7 +47,8 @@ with mp_pose.Pose(
 			rhip = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_HIP]
 
 			vis = np.array([rshoulder.visibility, lshoulder.visibility, lhip.visibility, rhip.visibility])
-			# vis = np.array([1,1,1,1])
+			vis = np.where(vis > 0.5, 1, 0)
+			num_elements = np.sum(vis)
 			
 			rshoulder = to_vect(rshoulder)
 			lshoulder = to_vect(lshoulder)
@@ -57,14 +58,14 @@ with mp_pose.Pose(
 		
 		
 			m1 = np.c_[rshoulder, lshoulder, lhip, rhip]
-			center_mass = m1.dot(vis)/4			
+			center_mass = m1.dot(vis)/num_elements
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 			
 
 			# print(center_mass, vis)
 			l_list = landmark_pb2.NormalizedLandmarkList(
 				landmark = [
-					v4_to_landmark(cm4)
+					v4_to_landmark(cm4),
 				]
 			)
 			mp_drawing.draw_landmarks(
