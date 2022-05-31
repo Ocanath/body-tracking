@@ -97,6 +97,28 @@ def ht_from_2_vectors(vx, vyref, origin):
 	return ret
 
 """
+	get xyz/rpy from a 4x4 homogeneous transformation matrix
+"""
+def get_xyz_rpy(R):
+	yaw = np.arctan2(R[1][0],R[0][0])
+	pitch = np.arctan2( -R[2][0], np.sqrt(R[2][1]**2+R[2][2]**2))
+	roll = np.arctan2(R[2][1],R[2][2])
+	rpy = np.array([roll,pitch,yaw])
+	xyz = R[0:3,3]
+	return xyz, rpy
+
+"""
+	get 4x4 homogeneous transformation matrix from xyz/rpy
+"""
+def get_ht4x4_from_xyz_rpy(xyz, rpy):
+	Hyaw = ht_rotz(rpy[2])
+	Hpitch = ht_roty(rpy[1])
+	Hroll = ht_rotx(rpy[0])
+	H = Hyaw.dot(Hpitch.dot(Hroll))
+	H[0:3,3] = xyz
+	return H
+
+"""
 	restrict val to lowerlim-upperlim
 """	
 def clamp(val, lowerlim, upperlim):
