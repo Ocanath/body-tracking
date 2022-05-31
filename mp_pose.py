@@ -6,7 +6,7 @@ mp_pose = mp.solutions.pose
 from scipy import signal
 from rtfilt import *
 from vect_tools import *
-
+import time
 
 
 lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='butter', output='sos', fs=30)	#filter for the fps counter
@@ -61,11 +61,14 @@ with mp_pose.Pose(
 			center_mass = m1.dot(vis)/num_elements
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 			
+			t = time.time()
+			cmTest = np.array([0.1*np.cos(t)+0.5,0.1*np.sin(t)+0.5, 1.5*np.sin(t)])
 
 			# print(center_mass, vis)
 			l_list = landmark_pb2.NormalizedLandmarkList(
 				landmark = [
 					v4_to_landmark(cm4),
+					v4_to_landmark(cmTest)
 				]
 			)
 			mp_drawing.draw_landmarks(
@@ -75,8 +78,10 @@ with mp_pose.Pose(
 				mp_drawing_styles.get_default_hand_landmarks_style(),
 				mp_drawing_styles.get_default_hand_connections_style())
 
-			
-			
+			hw_b = ht_rotz(0)
+			# hw_b[0:3,3] = np.array([0,-100e-3,0])
+			#print(center_mass[2])
+			center_mass = center_mass + np.array([-0.5, -0.5, 1.5])
 			
 			
 
@@ -88,6 +93,9 @@ with mp_pose.Pose(
 			results.pose_landmarks,
 			mp_pose.POSE_CONNECTIONS,
 			landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+		
+		# mp_drawing.plot_landmarks(results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
+		
 		# Flip the image horizontally for a selfie-view display.
 		cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
 

@@ -52,6 +52,36 @@ def ht_rotx(ang):
 		[0, 0, 0, 1]])
 	return h
 
+
+"""
+	Returns a 4x4 homogeneous transformation matrix
+	which is the principle rotation about the Z axis by the
+	angle 'ang' (in radians).
+"""	
+def ht_rotz(ang):
+	cth = np.cos(ang)
+	sth = np.sin(ang)
+	h = np.array([ [cth, -sth, 0, 0],
+		[sth, cth, 0, 0],
+		[0, 0, 1, 0],
+		[0, 0, 0, 1]])
+	return h
+
+"""
+	Returns a 4x4 homogeneous transformation matrix
+	which is the principle rotation about the Y axis by the
+	angle 'ang' (in radians).
+"""	
+def ht_roty(ang):
+	cth = np.cos(ang)
+	sth = np.sin(ang)
+	h = np.array([ [cth, 0, sth, 0],
+		[0, 1, 0, 0],
+		[-sth, 0, cth, 0],
+		[0, 0, 0, 1]])
+	return h
+
+
 def ht_from_2_vectors(vx, vyref, origin):
 	ret = np.zeros((4,4))
 	
