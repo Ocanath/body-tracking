@@ -26,13 +26,13 @@
 			<origin xyz = "22.41911e-3 -0.15798201e-3 -0.01319866e-3" rpy = "0 0 0"/>
 		</inertial>
 						
-		<visual>
+		<visual name="palm_mesh">
 			<origin rpy = "0 0 0" xyz = "0 0 0"/>
 			<geometry>
 				<mesh filename="models/FB_palm_ref.STL"/>
 			</geometry>
 		</visual>		
-		<visual>
+		<visual name="wrist_mesh">
 			<origin rpy = "0 0 0" xyz = "0 0 0"/>
 			<geometry>
 				<mesh filename="models/WRISTADAPTER.STL"/>
@@ -48,20 +48,7 @@
 			<inertia ixx="0.29766e-6" ixy = "-0.06447133e-6" ixz = "-0.00423315e-6" iyy = "3.6947967e-6" iyz = "0.00083028e-6" izz = "3.8176336e-6" />
 			<origin xyz = "22.41911e-3 -0.15798201e-3 -0.01319866e-3" rpy = "0 0 0"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<!--<cylinder length="8" radius="7"/>-->
-				<sphere radius = "7e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "19.23500e-3 1.62500e-3 0" rpy = "0 0 0.084474"/>
-			<geometry>	
-				<box size = "38.6070382e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
+		<visual name="index_mesh_1">
 			<origin xyz = "38.472723e-3 3.257695e-3 0.000000" rpy = "0 0 0.084474"/>
 			<geometry>
 				<mesh filename="models/idx-F1.STL"/>
@@ -74,25 +61,7 @@
 			<inertia ixx="0.82671e-6" ixy = "-1.08876e-6" ixz = "-0.00037e-6" iyy = "1.98028e-6" iyz = "0.00081e-6" izz = "2.64638e-6" />
 			<origin rpy = "0 0 0" xyz = "13.36818e-3 -8.75392e-3 -0.02886e-3"/>
 		</inertial>		
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "5e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "15.5333e-3 -8.501e-3 0" rpy = "0 0 -0.500734962"/>
-			<geometry>	
-				<box size = "35.41e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "29.159500e-3 -11.643970e-3 -0.148280e-3" rpy = "1.5708 0 -0.420107"/>
-			<geometry>
-				<cylinder length = "3e-3" radius = "4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
+		<visual name="index_mesh_2">
 			<origin rpy = "0 0 0" xyz = "9.1241e-3 0 0"/>
 			<geometry>
 				<mesh filename="models/idx-F2.STL"/>
@@ -124,21 +93,8 @@
 			<inertia ixx="0.29766e-6" ixy = "-0.06447133e-6" ixz = "-0.00423315e-6" iyy = "3.6947967e-6" iyz = "0.00083028e-6" izz = "3.8176336e-6" />
 			<origin xyz = "22.41911e-3 -0.15798201e-3 -0.01319866e-3" rpy = "0 0 0"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<!--<cylinder length="8" radius="7"/>-->
-				<sphere radius = "7e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "19.23500e-3 1.62500e-3 0" rpy = "0 0 0.084474"/>
-			<geometry>	
-				<box size = "38.6070382e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
 		
-		<visual>
+		<visual name="middle_mesh_1">
 			<origin xyz = "38.472723e-3 3.257695e-3 0.000000" rpy = "0 0 0.084474"/>
 			<geometry>
 				<mesh filename="models/idx-F1.STL"/>
@@ -152,25 +108,7 @@
 			<inertia ixx="0.82671e-6" ixy = "-1.08876e-6" ixz = "-0.00037e-6" iyy = "1.98028e-6" iyz = "0.00081e-6" izz = "2.64638e-6" />
 			<origin rpy = "0 0 0" xyz = "13.36818e-3 -8.75392e-3 -0.02886e-3"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "5e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "15.5333e-3 -8.501e-3 0" rpy = "0 0 -0.500734962"/>
-			<geometry>	
-				<box size = "35.41e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "29.159500e-3 -11.643970e-3 -0.148280e-3" rpy = "1.5708 0 -0.420107"/>
-			<geometry>
-				<cylinder length = "3e-3" radius = "4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
+		<visual name="middle_mesh_2">
 			<origin rpy = "0 0 0" xyz = "9.1241e-3 0 0"/>
 			<geometry>
 				<mesh filename="models/idx-F2.STL"/>
@@ -204,21 +142,8 @@
 			<inertia ixx="0.29766e-6" ixy = "-0.06447133e-6" ixz = "-0.00423315e-6" iyy = "3.6947967e-6" iyz = "0.00083028e-6" izz = "3.8176336e-6" />
 			<origin xyz = "22.41911e-3 -0.15798201e-3 -0.01319866e-3" rpy = "0 0 0"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "7e-3"/>
-				<!--<cylinder length="8" radius="7"/>-->
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "19.23500e-3 1.62500e-3 0" rpy = "0 0 0.084474"/>
-			<geometry>	
-				<box size = "38.6070382e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
 		
-		<visual>
+		<visual name="ring_mesh_1">
 			<origin xyz = "38.472723e-3 3.257695e-3 0.000000" rpy = "0 0 0.084474"/>
 			<geometry>
 				<mesh filename="models/idx-F1.STL"/>
@@ -233,32 +158,12 @@
 			<inertia ixx="0.82671e-6" ixy = "-1.08876e-6" ixz = "-0.00037e-6" iyy = "1.98028e-6" iyz = "0.00081e-6" izz = "2.64638e-6" />
 			<origin rpy = "0 0 0" xyz = "13.36818e-3 -8.75392e-3 -0.02886e-3"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "5e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "15.5333e-3 -8.501e-3 0" rpy = "0 0 -0.500734962"/>
-			<geometry>	
-				<box size = "35.41e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "29.159500e-3 -11.643970e-3 -0.148280e-3" rpy = "1.5708 0 -0.420107"/>
-			<geometry>
-				<cylinder length = "3e-3" radius = "4e-3"/>
-			</geometry>
-		</visual>
-		
-		<visual>
+		<visual name="ring_mesh_2">
 			<origin rpy = "0 0 0" xyz = "9.1241e-3 0 0"/>
 			<geometry>
 				<mesh filename="models/idx-F2.STL"/>
 			</geometry>
-		</visual>
-		
+		</visual>		
 	</link>
 	<joint name="ring_q1" type="revolute">
 		<parent link="base"/>
@@ -290,20 +195,8 @@
 			<inertia ixx="0.29766e-6" ixy = "-0.06447133e-6" ixz = "-0.00423315e-6" iyy = "3.6947967e-6" iyz = "0.00083028e-6" izz = "3.8176336e-6" />
 			<origin xyz = "22.41911e-3 -0.15798201e-3 -0.01319866e-3" rpy = "0 0 0"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "7e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "19.23500e-3 1.62500e-3 0" rpy = "0 0 0.084474"/>
-			<geometry>	
-				<box size = "38.6070382e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
 		
-		<visual>
+		<visual name="pinky_mesh_1">
 			<origin xyz = "38.472723e-3 3.257695e-3 0.000000" rpy = "0 0 0.084474"/>
 			<geometry>
 				<mesh filename="models/idx-F1.STL"/>
@@ -317,26 +210,7 @@
 			<inertia ixx="0.82671e-6" ixy = "-1.08876e-6" ixz = "-0.00037e-6" iyy = "1.98028e-6" iyz = "0.00081e-6" izz = "2.64638e-6" />
 			<origin rpy = "0 0 0" xyz = "13.36818e-3 -8.75392e-3 -0.02886e-3"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "5e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "15.5333e-3 -8.501e-3 0" rpy = "0 0 -0.500734962"/>
-			<geometry>	
-				<box size = "35.41e-3 4e-3 4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "29.159500e-3 -11.643970e-3 -0.148280e-3" rpy = "1.5708 0 -0.420107"/>
-			<geometry>
-				<cylinder length = "3e-3" radius = "4e-3"/>
-			</geometry>
-		</visual>
-		
-		<visual>
+		<visual name="pinky_mesh_2">
 			<origin rpy = "0 0 0" xyz = "9.1241e-3 0 0"/>
 			<geometry>
 				<mesh filename="models/idx-F2.STL"/>
@@ -372,21 +246,8 @@
 			<inertia ixx="0.16931e-6" ixy = "-0.076214e-6" ixz = "-0.16959148e-6" iyy = "0.77769934e-6" iyz = "0.0156622e-6" izz = "0.7249122e-6" />
 			<origin rpy = "0 0 0" xyz = "14.606e-3 -1.890854e-3 -3.1155356e-3"/>
 		</inertial>
-		<visual>
-			<origin xyz = "13.851489e-3 -1.900374e-3 -6.866140e-3" rpy = "0.490960 0.456500 -0.136345" />
-			<geometry>
-				<box size = "31.15246724e-3 5e-3 4e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "0 0 0" rpy = "0 0 0"/>
-			<geometry>
-				<sphere radius = "8e-3"/>
-				<!--<cylinder length = "14" radius = "7"/>-->
-			</geometry>
-		</visual>
 		
-		<visual>
+		<visual name="thumb_mesh_1">
 			<origin xyz = "27.8283501e-3 0 -14.7507000e-3" rpy = "4.450589592585541 0 0" />
 			<geometry>
 				<mesh filename="models/thumb-F1.STL"/>
@@ -400,27 +261,8 @@
 			<inertia ixx="4.4789082e-6" ixy = "4.4789082e-6" ixz = "-0.62144934e-6" iyy = "15.600996e-6" iyz = "-0.07466143e-6" izz = "17.908554e-6" />
 			<origin rpy = "0 0 0" xyz = "30.020522e-3 5.59476e-3 -4.1504356e-3"/>
 		</inertial>
-		<visual>
-			<origin xyz = "0 0 -3.93482782e-3" rpy = "0 0 0"/> <!-- rotation axis cylinder -->
-			<geometry>
-				<sphere radius = "8.9e-3"/>
-				<!--<cylinder length = "7" radius = "8.9"/>-->
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "26.851927e-3 6.766622e-3 -3.934828e-3" rpy = "0.000000 -0.000000 0.462507" />
-			<geometry>
-				<box size = "60.93e-3 4e-3 8e-3"/>
-			</geometry>
-		</visual>
-		<visual>
-			<origin xyz = "56.730453e-3 19.890903e-3 -3.934828e-3" rpy = "1.570800 -0.000000 0.343830" />
-			<geometry>
-				<cylinder length = "7e-3" radius = "7e-3"/>
-			</geometry>
-		</visual>
 		
-		<visual>
+		<visual name="thumb_mesh_2">
 			<origin xyz = "65.18669e-3 23.34021e-3 -3.93483e-3" rpy = "3.141592 0 0.343830"/>
 			<geometry>
 				<mesh filename="models/thumb-F2.STL"/>

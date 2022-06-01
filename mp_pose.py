@@ -8,7 +8,22 @@ from rtfilt import *
 from vect_tools import *
 import time
 
+"""
+fx 	0 	cx
+0 	fy 	cy
+0	0	1
 
+cx, cy is optical center
+fx, fy is focal length
+
+fx=fy on most cameras
+"""
+cameraMatrix = np.array([[583.34552231,   0.,         307.58226975],
+	[  0.,         584.08552834, 253.14697676],
+	[  0.,           0.,           1.,        ]])
+
+ 
+ 
 lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='butter', output='sos', fs=30)	#filter for the fps counter
 
 # For webcam input:
@@ -19,7 +34,10 @@ with mp_pose.Pose(
 	
 	tprev = cv2.getTickCount()	
 	warr_fps = [0,0,0]
-
+	
+	success, image = cap.read()
+	print("imsize: ", image.shape[0:2])
+	
 	while cap.isOpened():
 	
 		ts = cv2.getTickCount()

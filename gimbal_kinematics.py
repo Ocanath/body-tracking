@@ -10,7 +10,19 @@ import yourdfpy
 
 
 robot = yourdfpy.URDF.load("ABH_URDF/ability_hand.urdf")
-
+q1 = 10*np.pi/180
+q2 = 51*np.pi/180
+cfg = dict(index_q1=q1,
+	middle_q1=q1,
+	ring_q1=q1, 
+	pinky_q1=q1, 
+	index_q2=q2, 
+	middle_q2=q2, 
+	pinky_q2=q2, 
+	ring_q2=q2, 
+	thumb_q1=-30*np.pi/180, 
+	thumb_q2=20*np.pi/180)
+robot.update_cfg(cfg)
 
 
 figure = pyplot.figure()
@@ -21,27 +33,52 @@ ax=mplot3d.Axes3D(figure)
 base = mesh.Mesh.from_file('ABH_URDF/models/FB_palm_ref.STL')
 base.transform(robot.get_transform("base", "base"))
 ax.add_collection3d(mplot3d.art3d.Poly3DCollection(base.vectors))
+combinedMesh = base
 
 
-Il1 = mesh.Mesh.from_file('ABH_URDF/models/idx-F1.STL')
-MIDX = robot.get_transform("index_L2", "base")
-Il1.transform(MIDX)
-xyz,rpy = get_xyz_rpy(MIDX)
-print('INDEX: ', 'xyz = ', xyz*1e3, 'rpy = ', rpy*180/np.pi)
-ax.add_collection3d(mplot3d.art3d.Poly3DCollection(Il1.vectors))
-base
+mesh_name_str = ["index_mesh_", 
+	"middle_mesh_",
+	"ring_mesh_",
+	"pinky_mesh_"]
+
+for mesh_name in mesh_name_str:
+	"""
+	Get Index finger geometry and frame reference from urdf
+	"""
+	pMesh = mesh.Mesh.from_file('ABH_URDF/models/idx-F1.STL')
+	Hlink = robot.get_transform(mesh_name+"1", "base")
+	pMesh.transform(Hlink)
+	ax.add_collection3d(mplot3d.art3d.Poly3DCollection(pMesh.vectors))
+	combinedMesh = mesh.Mesh(np.concatenate([combinedMesh.data, pMesh.data]))
+
+	"""
+	Get Index finger geometry and frame reference from urdf
+	"""
+	pMesh = mesh.Mesh.from_file('ABH_URDF/models/idx-F2.STL')
+	Hlink = robot.get_transform(mesh_name+"2", "base")
+	pMesh.transform(Hlink)
+	ax.add_collection3d(mplot3d.art3d.Poly3DCollection(pMesh.vectors))
+	combinedMesh = mesh.Mesh(np.concatenate([combinedMesh.data, pMesh.data]))
 
 
-Il2 = mesh.Mesh.from_file('ABH_URDF/models/idx-F2.STL')
-m = robot.get_transform("index_L2", "base")
-m = np.dot(m,ht_rotz(53.1*np.pi/180))
-Il2.transform(m)
-ax.add_collection3d(mplot3d.art3d.Poly3DCollection(Il2.vectors))
+
+pMesh = mesh.Mesh.from_file('ABH_URDF/models/thumb-F1.STL')
+Hlink = robot.get_transform("thumb_mesh_1", "base")
+pMesh.transform(Hlink)
+ax.add_collection3d(mplot3d.art3d.Poly3DCollection(pMesh.vectors))
+combinedMesh = mesh.Mesh(np.concatenate([combinedMesh.data, pMesh.data]))
+
+pMesh = mesh.Mesh.from_file('ABH_URDF/models/thumb-F2.STL')
+Hlink = robot.get_transform("thumb_mesh_2", "base")
+pMesh.transform(Hlink)
+ax.add_collection3d(mplot3d.art3d.Poly3DCollection(pMesh.vectors))
+combinedMesh = mesh.Mesh(np.concatenate([combinedMesh.data, pMesh.data]))
 
 
-# fl2 = mesh.Mesh.from_file('ABH_URDF/models/idx-F2.STL')
-# fl2.transform(robot.get_transform("base", "index_L2"))
-# axes.add_collection3d(mplot3d.art3d.Poly3DCollection(fl2.vectors))
+pMesh = mesh.Mesh.from_file('ABH_URDF/models/WRISTADAPTER.STL')
+pMesh.transform(robot.get_transform("base", "base"))
+ax.add_collection3d(mplot3d.art3d.Poly3DCollection(pMesh.vectors))
+combinedMesh = mesh.Mesh(np.concatenate([combinedMesh.data, pMesh.data]))
 
 
 # Auto scale to the mesh size
@@ -49,12 +86,9 @@ ax.axes.set_xlim3d(-.1,0.1)
 ax.axes.set_ylim3d(-.1,0.1)
 ax.axes.set_zlim3d(-.1,0.1)
 
-
-
-combinedMesh = mesh.Mesh(np.concatenate([base.data, Il1.data, Il2.data]))
 combinedMesh.save('combined.stl')
 
 # Show the plot to the screensoli
-pyplot.show()
+# pyplot.show()
 
-
+print("Success!")
