@@ -9,7 +9,7 @@ from vect_tools import *
 import time
 import serial
 from serial.tools import list_ports
-from serialhelper import create_position_payload
+from serialhelper import create_sauron_position_payload
 
 
 """
@@ -50,7 +50,7 @@ if not port:
 for p in port:
 	try:
 		ser = []
-		ser = (serial.Serial(p[0],'460800', timeout = 0))
+		ser = (serial.Serial(p[0],'2000000', timeout = 0))
 		slist.append(ser)
 		print ("connected!", p)
 		break
@@ -119,12 +119,13 @@ with mp_pose.Pose(
 			t = time.time()
 			x = np.sin(t)
 			y = np.cos(t)
-			create_position_payload(int(x*1000), int(y*1000))
+			pld = create_sauron_position_payload(int(x*1000), int(y*1000))
+			ser.write(pld)
 
 
 		
 
-			# print(center_mass)
+			print(center_mass)
 			l_list = landmark_pb2.NormalizedLandmarkList(
 				landmark = [
 					v4_to_landmark(cm4),
