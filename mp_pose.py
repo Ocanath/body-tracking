@@ -7,6 +7,10 @@ from scipy import signal
 from rtfilt import *
 from vect_tools import *
 import time
+import serial
+from serial.tools import list_ports
+from serialhelper import create_position_payload
+
 
 """
 fx 	0 	cx
@@ -25,6 +29,37 @@ cameraMatrix = np.array([[583.34552231,   0.,         307.58226975],
  
  
 lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='butter', output='sos', fs=30)	#filter for the fps counter
+
+
+
+""" 
+	Find a serial com port.
+"""
+com_ports_list = list(list_ports.comports())
+port = []
+slist = []
+for p in com_ports_list:
+	if(p):
+		pstr = ""
+		pstr = p
+		port.append(pstr)
+		print("Found:", pstr)
+if not port:
+	print("No port found")
+
+for p in port:
+	try:
+		ser = []
+		ser = (serial.Serial(p[0],'460800', timeout = 0))
+		slist.append(ser)
+		print ("connected!", p)
+		break
+		# print ("found: ", p)
+	except:
+		print("failded.")
+		pass
+print( "found ", len(slist), "ports.")
+
 
 # For webcam input:
 cap = cv2.VideoCapture(0)
@@ -63,6 +98,7 @@ with mp_pose.Pose(
 			lshoulder = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER]
 			lhip = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP]
 			rhip = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_HIP]
+			nose = results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE]
 
 			vis = np.array([rshoulder.visibility, lshoulder.visibility, lhip.visibility, rhip.visibility])
 			vis = np.where(vis > 0.5, 1, 0)
@@ -73,20 +109,26 @@ with mp_pose.Pose(
 			lhip = to_vect(lhip)
 			rhip = to_vect(rhip)
 			
-		
+
+
 		
 			m1 = np.c_[rshoulder, lshoulder, lhip, rhip]
 			center_mass = m1.dot(vis)/num_elements
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 			
 			t = time.time()
-			cmTest = np.array([0.1*np.cos(t)+0.5,0.1*np.sin(t)+0.5, 1.5*np.sin(t)])
+			x = np.sin(t)
+			y = np.cos(t)
+			create_position_payload(int(x*1000), int(y*1000))
 
-			# print(center_mass, vis)
+
+		
+
+			# print(center_mass)
 			l_list = landmark_pb2.NormalizedLandmarkList(
 				landmark = [
 					v4_to_landmark(cm4),
-					v4_to_landmark(cmTest)
+					nose
 				]
 			)
 			mp_drawing.draw_landmarks(
@@ -106,11 +148,11 @@ with mp_pose.Pose(
 		# Draw the pose annotation on the image.
 		image.flags.writeable = True
 		image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-		mp_drawing.draw_landmarks(
-			image,
-			results.pose_landmarks,
-			mp_pose.POSE_CONNECTIONS,
-			landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+		# mp_drawing.draw_landmarks(
+		# 	image,
+		# 	results.pose_landmarks,
+		# 	mp_pose.POSE_CONNECTIONS,
+		# 	landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 		
 		# mp_drawing.plot_landmarks(results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 		
