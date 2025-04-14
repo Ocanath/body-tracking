@@ -1,6 +1,9 @@
 import unittest
+import math
+
 from serialhelper import fletchers_checksum16, create_sauron_position_payload
 from PPP_stuffing import PPP_stuff
+from sauron_ik import get_ik_angles_double
 
 class TestSerialHelper(unittest.TestCase):
 	def test_create_position_payload(self):
@@ -25,6 +28,12 @@ class TestSerialHelper(unittest.TestCase):
 		btest = PPP_stuff(b_in)
 		self.assertEqual(btrue, btest)
 
+	def test_sauron_ik(self):
+		t1, t2 = get_ik_angles_double(-3., 3., 10.)
+		th1_deg = t1*180.0/math.pi
+		th2_deg = t2*180.0/math.pi
+		self.assertAlmostEqual(-16.70, th1_deg, places=2)
+		self.assertAlmostEqual(15.39, th2_deg, places=2)
 
 if __name__ == '__main__':
 	unittest.main()

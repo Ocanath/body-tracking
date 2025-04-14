@@ -10,7 +10,8 @@ import time
 import serial
 from serial.tools import list_ports
 from serialhelper import create_sauron_position_payload
-
+from sauron_ik import get_ik_angles_double
+import math
 
 """
 fx 	0 	cx
@@ -117,9 +118,14 @@ with mp_pose.Pose(
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 			
 			t = time.time()
-			x = np.sin(t)
-			y = np.cos(t)
-			pld = create_sauron_position_payload(int(x*1000), int(y*1000))
+			x = math.sin(t)
+			y = math.cos(t)+10
+			xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
+			yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
+			theta1, theta2 = get_ik_angles_double(xr, yr, 100)
+			theta1 = int(theta1*math.pi*2**14)
+			theta2 = int(theta2*math.pi*2**14)
+			pld = create_sauron_position_payload(theta1, theta2)
 			ser.write(pld)
 
 
