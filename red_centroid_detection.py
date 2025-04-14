@@ -5,6 +5,9 @@ def main():
     # Initialize the video capture
     cap = cv2.VideoCapture(0)
     
+    # Define minimum area for valid detections (in pixels)
+    MIN_AREA = 50  # Adjust this based on your dot size
+    
     while True:
         # Read a frame from the camera
         ret, frame = cap.read()
@@ -27,12 +30,24 @@ def main():
         mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
         mask = cv2.bitwise_or(mask1, mask2)
         
+        # Clean up the mask using morphological operations
+        kernel = np.ones((3,3), np.uint8)
+        # Remove small noise
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        # Fill small holes
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        
         # Find contours in the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # Draw centroids for each contour
+        # Draw centroids for each contour that meets size criteria
         for contour in contours:
-            # Calculate moments
+            # Calculate the area of the contour
+            # area = cv2.contourArea(contour)
+            
+            # Only process contours larger than minimum area
+            # if area > MIN_AREA:
+                # Calculate moments
             M = cv2.moments(contour)
             if M["m00"] != 0:
                 # Calculate centroid
@@ -41,9 +56,15 @@ def main():
                 
                 # Draw a dot at the centroid
                 cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
+                
+                # Optional: Draw the contour and display area
+                cv2.drawContours(frame, [contour], -1, (255, 0, 0), 2)
+                # cv2.putText(frame, f"Area: {int(area)}", (cx-20, cy-20),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         
-        # Display the result
+        # Display the results
         cv2.imshow('Red Object Centroid Detection', frame)
+        cv2.imshow('Red Mask', mask)
         
         # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):

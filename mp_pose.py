@@ -118,20 +118,28 @@ with mp_pose.Pose(
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 			
 			t = time.time()
-			x = math.sin(t)
-			y = math.cos(t)+10
+			# x = math.sin(t)
+			# y = math.cos(t)+10
+			x = -cm4[0]
+			y = -cm4[1]
+			z = 10
+			ang = math.atan2(y, x)
+			dist = math.sqrt(x**2 + y**2)
+			if(dist > 100):
+				x = 100*math.cos(ang)
+				y = 100*math.sin(ang)
+		
 			xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
 			yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-			theta1, theta2 = get_ik_angles_double(xr, yr, 100)
+			theta1, theta2 = get_ik_angles_double(xr, yr, z)
 			theta1 = int(theta1*math.pi*2**14)
 			theta2 = int(theta2*math.pi*2**14)
 			pld = create_sauron_position_payload(theta1, theta2)
 			ser.write(pld)
 
+			print(x, y, z, cm4[2])
 
-		
-
-			print(center_mass)
+	
 			l_list = landmark_pb2.NormalizedLandmarkList(
 				landmark = [
 					v4_to_landmark(cm4),
