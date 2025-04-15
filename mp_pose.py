@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import json
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
@@ -25,12 +26,7 @@ fx, fy is focal length
 
 fx=fy on most cameras
 """
-# Loading the calibration data later
-with open('camera_calibration-1.pkl', 'rb') as f:
-    data = pickle.load(f)
-    camera_matrix = data['camera_matrix']
-    dist_coeffs = data['dist_coeffs']
- 
+
  
  
 lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='butter', output='sos', fs=30)	#filter for the fps counter
@@ -94,6 +90,59 @@ with mp_pose.Pose(
 		pixel_y = int(y * image_height)
 		return pixel_x, pixel_y
 
+	def load_calibration(filename):
+		"""Load calibration parameters from a JSON file."""
+		with open(filename, 'r') as f:
+			data = json.load(f)
+		
+		# Convert lists back to numpy arrays
+		camera_matrix = np.array(data['camera_matrix'])
+		dist_coeffs = np.array(data['dist_coeffs'])
+		
+		return camera_matrix, dist_coeffs
+
+	# Load camera calibration data
+	try:
+		camera_matrix, dist_coeffs = load_calibration('camera_calibration.json')
+		print("Successfully loaded camera calibration data")
+		print("fx = ", camera_matrix[0,0])
+		print("fy = ", camera_matrix[1,1])
+		print("cx = ", camera_matrix[0,2])
+		print("cy = ", camera_matrix[1,2])
+	except Exception as e:
+		print(f"Error loading calibration data: {e}")
+		print("Using default camera parameters")
+
+
+	def pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix):
+		"""
+		Convert pixel coordinates to a real-world direction vector from the camera's optical center.
+		
+		Args:
+			pixel_x, pixel_y: Pixel coordinates in the image
+			camera_matrix: 3x3 camera matrix [fx, 0, cx; 0, fy, cy; 0, 0, 1]
+		
+		Returns:
+			direction_vector: 3D unit vector pointing from camera center to the point
+		"""
+		# Get camera parameters from matrix
+		fx = camera_matrix[0,0]
+		fy = camera_matrix[1,1]
+		cx = camera_matrix[0,2]
+		cy = camera_matrix[1,2]
+		
+		# Convert pixel coordinates to normalized image coordinates
+		x = (pixel_x - cx) / fx
+		y = (pixel_y - cy) / fy
+		
+		# Create direction vector (z=1 for normalized coordinates)
+		direction = np.array([x, y, 1.0])
+		
+		# Normalize to unit vector
+		direction = direction / np.linalg.norm(direction)
+		
+		return direction
+
 	while cap.isOpened():
 	
 		ts = cv2.getTickCount()
@@ -108,6 +157,9 @@ with mp_pose.Pose(
 			print("Ignoring empty camera frame.")
 			# If loading a video, use 'break' instead of 'continue'.
 			continue
+
+		# Undistort the image using calibration data
+		image = cv2.undistort(image, camera_matrix, dist_coeffs)
 
 		# To improve performance, optionally mark the image as not writeable to
 		# pass by reference.
@@ -142,35 +194,39 @@ with mp_pose.Pose(
 			center_mass = m1.dot(vis)/num_elements
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 
-			# Convert nose coordinates to pixel coordinates
+			# Convert center of mass to pixel coordinates
+			# pixel_x, pixel_y = normalized_to_pixel_coords(
+			# 	(cm4[0], cm4[1], cm4[2]),
+			# 	image_width,
+			# 	image_height
+			# )
 			pixel_x, pixel_y = normalized_to_pixel_coords(
-				(cm4[0], cm4[1], cm4[2]),
+				(nose.x, nose.y, nose.z),
 				image_width,
 				image_height
 			)
-			
 
-			t = time.time()
-			# x = math.sin(t)
-			# y = math.cos(t)+10
-			x = -pixel_x
-			y = -pixel_y
-			z = 10
-			ang = math.atan2(y, x)
-			dist = math.sqrt(x**2 + y**2)
-			if(dist > 100):
-				x = 100*math.cos(ang)
-				y = 100*math.sin(ang)
-		
+			# Convert pixel coordinates to real-world direction vector
+			direction_vector = pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix)
+			
+			# Print the direction vector
+			# print(f"Direction vector: {direction_vector}")
+			
+			# Use the direction vector for your application
+			x = -direction_vector[0]	#track sign inversion
+			y = -direction_vector[1]
+			z = direction_vector[2]
+
+
 			xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
 			yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-			theta1, theta2 = get_ik_angles_double(xr, yr, z)
-			theta1 = int(theta1*math.pi*2**14)
-			theta2 = int(theta2*math.pi*2**14)
+			theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
+			theta1 = int(theta1_rad*2**14)
+			theta2 = int(theta2_rad*2**14)
 			pld = create_sauron_position_payload(theta1, theta2)
 			ser.write(pld)
 
-			print(pixel_x, pixel_y, z, cm4[2])
+			print(x, y, z, theta1*180./(2**14*math.pi), theta2*180./(2**14*math.pi))
 
 	
 			l_list = landmark_pb2.NormalizedLandmarkList(
