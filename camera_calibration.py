@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import os
 import glob
-import pickle
+import json
 
 def calibrate_camera(images_path, pattern_size=(9,6), square_size=0.025):
     """
@@ -91,26 +91,33 @@ def calibrate_camera(images_path, pattern_size=(9,6), square_size=0.025):
     return camera_matrix, dist_coeffs, rvecs, tvecs
 
 def save_calibration(filename, camera_matrix, dist_coeffs):
-    """Save calibration parameters to a file."""
+    """Save calibration parameters to a JSON file."""
+    # Convert numpy arrays to lists for JSON serialization
     data = {
-        'camera_matrix': camera_matrix,
-        'dist_coeffs': dist_coeffs
+        'camera_matrix': camera_matrix.tolist(),
+        'dist_coeffs': dist_coeffs.tolist()
     }
-    with open(filename, 'wb') as f:
-        pickle.dump(data, f)
+    
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
     print(f"Calibration data saved to {filename}")
 
 def load_calibration(filename):
-    """Load calibration parameters from a file."""
-    with open(filename, 'rb') as f:
-        data = pickle.load(f)
-    return data['camera_matrix'], data['dist_coeffs']
+    """Load calibration parameters from a JSON file."""
+    with open(filename, 'r') as f:
+        data = json.load(f)
+    
+    # Convert lists back to numpy arrays
+    camera_matrix = np.array(data['camera_matrix'])
+    dist_coeffs = np.array(data['dist_coeffs'])
+    
+    return camera_matrix, dist_coeffs
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Camera calibration using checkerboard pattern')
     parser.add_argument('--images_path', default='calibration-images', help='Path to directory containing calibration images')
-    parser.add_argument('--output', default='camera_calibration.pkl',
+    parser.add_argument('--output', default='camera_calibration.json',
                       help='Output file for calibration parameters')
     parser.add_argument('--pattern-size', type=int, nargs=2, default=[9,6],
                       help='Number of inner corners in the checkerboard pattern (width, height)')
@@ -125,7 +132,7 @@ def main():
         
         print("\nCalibration Results:")
         print("Camera Matrix:")
-        print(camera_matrix) 
+        print(camera_matrix)
         print("\nDistortion Coefficients:")
         print(dist_coeffs)
         
