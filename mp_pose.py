@@ -13,6 +13,7 @@ from serial.tools import list_ports
 from serialhelper import create_sauron_position_payload
 from sauron_ik import get_ik_angles_double
 import math
+import pickle
 
 """
 fx 	0 	cx
@@ -24,10 +25,12 @@ fx, fy is focal length
 
 fx=fy on most cameras
 """
-cameraMatrix = np.array([[583.34552231,   0.,         307.58226975],
-	[  0.,         584.08552834, 253.14697676],
-	[  0.,           0.,           1.,        ]])
-
+# Loading the calibration data later
+with open('camera_calibration-1.pkl', 'rb') as f:
+    data = pickle.load(f)
+    camera_matrix = data['camera_matrix']
+    dist_coeffs = data['dist_coeffs']
+ 
  
  
 lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='butter', output='sos', fs=30)	#filter for the fps counter
@@ -61,7 +64,6 @@ for p in port:
 		print("failded.")
 		pass
 print( "found ", len(slist), "ports.")
-
 
 # For webcam input:
 cap = cv2.VideoCapture(0)
