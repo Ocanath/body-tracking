@@ -4,66 +4,110 @@ import cv2
 import numpy as np
 import os
 import glob
+import pickle
 
-# Defining the dimensions of checkerboard
-CHECKERBOARD = (6,9)
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+def calibrate_camera(images_path, pattern_size=(9,6), square_size=0.025):
+    """
+    Calibrate camera using checkerboard images.
+    
+    Args:
+        images_path: Path to directory containing calibration images
+        pattern_size: Tuple of (width, height) of inner corners
+        square_size: Size of squares in meters (for real-world scale)
+    
+    Returns:
+        camera_matrix: 3x3 camera matrix
+        dist_coeffs: Distortion coefficients
+        rvecs: Rotation vectors
+        tvecs: Translation vectors
+    """
+    # Prepare object points
+    objp = np.zeros((pattern_size[0] * pattern_size[1], 3), np.float32)
+    objp[:,:2] = np.mgrid[0:pattern_size[0], 0:pattern_size[1]].T.reshape(-1,2) * square_size
 
-# Creating vector to store vectors of 3D points for each checkerboard image
-objpoints = []
-# Creating vector to store vectors of 2D points for each checkerboard image
-imgpoints = [] 
+    # Arrays to store object points and image points
+    objpoints = [] # 3d points in real world space
+    imgpoints = [] # 2d points in image plane
 
+    # Get list of calibration images
+    images = glob.glob(os.path.join(images_path, '*.jpg')) + glob.glob(os.path.join(images_path, '*.png'))
+    
+    if not images:
+        raise ValueError(f"No images found in {images_path}")
 
-# Defining the world coordinates for 3D points
-objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
-objp[0,:,:2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
-prev_img_shape = None
+    # Process each image
+    for fname in images:
+        img = cv2.imread(fname)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# Extracting path of individual image stored in a given directory
-images = glob.glob('pattern.jpg')
-for fname in images:
-	img = cv2.imread(fname)
-	gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-	# Find the chess board corners
-	# If desired number of corners are found in the image then ret = true
-	ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
-	
-	"""
-	If desired number of corner are detected,
-	we refine the pixel coordinates and display 
-	them on the images of checker board
-	"""
-	if ret == True:
-		objpoints.append(objp)
-		# refining pixel coordinates for given 2d points.
-		corners2 = cv2.cornerSubPix(gray, corners, (11,11),(-1,-1), criteria)
-		
-		imgpoints.append(corners2)
+        # Find the chess board corners
+        ret, corners = cv2.findChessboardCorners(gray, pattern_size, None)
 
-		# Draw and display the corners
-		img = cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
-	
-	cv2.imshow('img',img)
-	cv2.waitKey(0)
+        # If found, add object points, image points
+        if ret:
+            objpoints.append(objp)
+            
+            # Refine corner locations
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+            corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+            imgpoints.append(corners2)
 
-cv2.destroyAllWindows()
+            # Draw and display the corners
+            cv2.drawChessboardCorners(img, pattern_size, corners2, ret)
+            cv2.imshow('img', img)
+            cv2.waitKey(500)
 
-h,w = img.shape[:2]
+    cv2.destroyAllWindows()
 
-"""
-Performing camera calibration by 
-passing the value of known 3D points (objpoints)
-and corresponding pixel coordinates of the 
-detected corners (imgpoints)
-"""
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+    # Calibrate camera
+    ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
+        objpoints, imgpoints, gray.shape[::-1], None, None)
 
-print("Camera matrix : \n")
-print(mtx)
-print("dist : \n")
-print(dist)
-print("rvecs : \n")
-print(rvecs)
-print("tvecs : \n")
-print(tvecs)
+    return camera_matrix, dist_coeffs, rvecs, tvecs
+
+def save_calibration(filename, camera_matrix, dist_coeffs):
+    """Save calibration parameters to a file."""
+    data = {
+        'camera_matrix': camera_matrix,
+        'dist_coeffs': dist_coeffs
+    }
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
+    print(f"Calibration data saved to {filename}")
+
+def load_calibration(filename):
+    """Load calibration parameters from a file."""
+    with open(filename, 'rb') as f:
+        data = pickle.load(f)
+    return data['camera_matrix'], data['dist_coeffs']
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Camera calibration using checkerboard pattern')
+    parser.add_argument('images_path', help='Path to directory containing calibration images')
+    parser.add_argument('--output', default='camera_calibration.pkl',
+                      help='Output file for calibration parameters')
+    parser.add_argument('--pattern-size', type=int, nargs=2, default=[9,6],
+                      help='Number of inner corners in the checkerboard pattern (width, height)')
+    parser.add_argument('--square-size', type=float, default=0.025,
+                      help='Size of squares in meters')
+    
+    args = parser.parse_args()
+    
+    try:
+        camera_matrix, dist_coeffs, rvecs, tvecs = calibrate_camera(
+            args.images_path, tuple(args.pattern_size), args.square_size)
+        
+        print("\nCalibration Results:")
+        print("Camera Matrix:")
+        print(camera_matrix)
+        print("\nDistortion Coefficients:")
+        print(dist_coeffs)
+        
+        save_calibration(args.output, camera_matrix, dist_coeffs)
+        
+    except Exception as e:
+        print(f"Error during calibration: {e}")
+
+if __name__ == '__main__':
+    main()
