@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import numpy as np
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
@@ -74,13 +75,31 @@ with mp_pose.Pose(
 	success, image = cap.read()
 	print("imsize: ", image.shape[0:2])
 	
+	def normalized_to_pixel_coords(normalized_coords, image_width, image_height):
+		"""
+		Convert MediaPipe normalized coordinates to pixel coordinates.
+		
+		Args:
+			normalized_coords: A tuple of (x, y, z) where x,y are in [0,1] and z is depth
+			image_width: Width of the image in pixels
+			image_height: Height of the image in pixels
+		
+		Returns:
+			Tuple of (pixel_x, pixel_y) coordinates
+		"""
+		x, y, z = normalized_coords
+		pixel_x = int(x * image_width)
+		pixel_y = int(y * image_height)
+		return pixel_x, pixel_y
+
 	while cap.isOpened():
 	
 		ts = cv2.getTickCount()
 		tdif = ts-tprev
 		tprev = ts
 		fps = cv2.getTickFrequency()/tdif
-
+		pixel_x = 0
+		pixel_y = 0
 	
 		success, image = cap.read()
 		if not success:
@@ -95,12 +114,16 @@ with mp_pose.Pose(
 		results = pose.process(image)
 		if results.pose_landmarks:
 	
+			# Get image dimensions
+			image_height, image_width = image.shape[:2]
+			
 			rshoulder = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER]
 			lshoulder = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER]
 			lhip = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP]
 			rhip = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_HIP]
 			nose = results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE]
 
+			
 			vis = np.array([rshoulder.visibility, lshoulder.visibility, lhip.visibility, rhip.visibility])
 			vis = np.where(vis > 0.5, 1, 0)
 			num_elements = np.sum(vis)
@@ -116,12 +139,20 @@ with mp_pose.Pose(
 			m1 = np.c_[rshoulder, lshoulder, lhip, rhip]
 			center_mass = m1.dot(vis)/num_elements
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
+
+			# Convert nose coordinates to pixel coordinates
+			pixel_x, pixel_y = normalized_to_pixel_coords(
+				(cm4[0], cm4[1], cm4[2]),
+				image_width,
+				image_height
+			)
 			
+
 			t = time.time()
 			# x = math.sin(t)
 			# y = math.cos(t)+10
-			x = -cm4[0]
-			y = -cm4[1]
+			x = -pixel_x
+			y = -pixel_y
 			z = 10
 			ang = math.atan2(y, x)
 			dist = math.sqrt(x**2 + y**2)
@@ -137,7 +168,7 @@ with mp_pose.Pose(
 			pld = create_sauron_position_payload(theta1, theta2)
 			ser.write(pld)
 
-			print(x, y, z, cm4[2])
+			print(pixel_x, pixel_y, z, cm4[2])
 
 	
 			l_list = landmark_pb2.NormalizedLandmarkList(
@@ -163,6 +194,9 @@ with mp_pose.Pose(
 		# Draw the pose annotation on the image.
 		image.flags.writeable = True
 		image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+
+			
 		# mp_drawing.draw_landmarks(
 		# 	image,
 		# 	results.pose_landmarks,
@@ -171,7 +205,10 @@ with mp_pose.Pose(
 		
 		# mp_drawing.plot_landmarks(results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 		
-		# Flip the image horizontally for a selfie-view display.
+		if 'pixel_x' in locals() and 'pixel_y' in locals():
+			cv2.drawMarker(image, (pixel_x, pixel_y), (0, 255, 0), 
+						 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+
 		cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
 
 		if cv2.waitKey(5) & 0xFF == 27:
