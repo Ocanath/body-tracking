@@ -35,8 +35,12 @@ def calibrate_camera(images_path, pattern_size=(9,6), square_size=0.025):
     if not images:
         raise ValueError(f"No images found in {images_path}")
 
+    print(f"\nFound {len(images)} images in {images_path}")
+    print("Processing images...")
+
     # Process each image
-    for fname in images:
+    successful_detections = 0
+    for idx, fname in enumerate(images, 1):
         img = cv2.imread(fname)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -45,6 +49,7 @@ def calibrate_camera(images_path, pattern_size=(9,6), square_size=0.025):
 
         # If found, add object points, image points
         if ret:
+            successful_detections += 1
             objpoints.append(objp)
             
             # Refine corner locations
@@ -54,10 +59,30 @@ def calibrate_camera(images_path, pattern_size=(9,6), square_size=0.025):
 
             # Draw and display the corners
             cv2.drawChessboardCorners(img, pattern_size, corners2, ret)
-            cv2.imshow('img', img)
-            cv2.waitKey(500)
+            
+            # Add text overlay
+            text = f"Image {idx}/{len(images)}: Pattern found!"
+            cv2.putText(img, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            
+            # Show the image
+            cv2.imshow('Checkerboard Detection', img)
+            cv2.waitKey(1000)  # Show for 1 second
+            
+        else:
+            # Show the image with failure message
+            text = f"Image {idx}/{len(images)}: Pattern not found"
+            cv2.putText(img, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.imshow('Checkerboard Detection', img)
+            cv2.waitKey(500)  # Show for 0.5 seconds
 
     cv2.destroyAllWindows()
+
+    print(f"\nCalibration Results:")
+    print(f"Successfully processed {successful_detections} out of {len(images)} images")
+    print(f"Success rate: {(successful_detections/len(images))*100:.1f}%")
+    
+    if successful_detections < 3:
+        raise ValueError("Need at least 3 successful pattern detections for calibration")
 
     # Calibrate camera
     ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
@@ -84,12 +109,12 @@ def load_calibration(filename):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Camera calibration using checkerboard pattern')
-    parser.add_argument('images_path', help='Path to directory containing calibration images')
+    parser.add_argument('--images_path', default='calibration-images', help='Path to directory containing calibration images')
     parser.add_argument('--output', default='camera_calibration.pkl',
                       help='Output file for calibration parameters')
     parser.add_argument('--pattern-size', type=int, nargs=2, default=[9,6],
                       help='Number of inner corners in the checkerboard pattern (width, height)')
-    parser.add_argument('--square-size', type=float, default=0.025,
+    parser.add_argument('--square-size', type=float, default=0.020,
                       help='Size of squares in meters')
     
     args = parser.parse_args()
@@ -100,7 +125,7 @@ def main():
         
         print("\nCalibration Results:")
         print("Camera Matrix:")
-        print(camera_matrix)
+        print(camera_matrix) 
         print("\nDistortion Coefficients:")
         print(dist_coeffs)
         
