@@ -195,16 +195,16 @@ with mp_pose.Pose(
 			cm4 = np.append(center_mass,1)#for R4 expression of a coordinate
 
 			# Convert center of mass to pixel coordinates
-			# pixel_x, pixel_y = normalized_to_pixel_coords(
-			# 	(cm4[0], cm4[1], cm4[2]),
-			# 	image_width,
-			# 	image_height
-			# )
 			pixel_x, pixel_y = normalized_to_pixel_coords(
-				(nose.x, nose.y, nose.z),
+				(cm4[0], cm4[1], cm4[2]),
 				image_width,
 				image_height
 			)
+			# pixel_x, pixel_y = normalized_to_pixel_coords(
+			# 	(nose.x, nose.y, nose.z),
+			# 	image_width,
+			# 	image_height
+			# )
 
 			# Convert pixel coordinates to real-world direction vector
 			direction_vector = pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix)
@@ -226,32 +226,32 @@ with mp_pose.Pose(
 			pld = create_sauron_position_payload(theta1, theta2)
 			ser.write(pld)
 
-			print(x, y, z, theta1*180./(2**14*math.pi), theta2*180./(2**14*math.pi))
+			# print(x, y, z, theta1*180./(2**14*math.pi), theta2*180./(2**14*math.pi))
 
 	
-			l_list = landmark_pb2.NormalizedLandmarkList(
-				landmark = [
-					v4_to_landmark(cm4),
-					nose
-				]
-			)
-			mp_drawing.draw_landmarks(
-				image,
-				l_list,
-				[],
-				mp_drawing_styles.get_default_hand_landmarks_style(),
-				mp_drawing_styles.get_default_hand_connections_style())
+			# l_list = landmark_pb2.NormalizedLandmarkList(
+			# 	landmark = [
+			# 		v4_to_landmark(cm4),
+			# 		nose
+			# 	]
+			# )
+			# mp_drawing.draw_landmarks(
+			# 	image,
+			# 	l_list,
+			# 	[],
+			# 	mp_drawing_styles.get_default_hand_landmarks_style(),
+			# 	mp_drawing_styles.get_default_hand_connections_style())
 
-			hw_b = ht_rotz(0)
-			# hw_b[0:3,3] = np.array([0,-100e-3,0])
-			#print(center_mass[2])
-			center_mass = center_mass + np.array([-0.5, -0.5, 1.5])
+			# hw_b = ht_rotz(0)
+			# # hw_b[0:3,3] = np.array([0,-100e-3,0])
+			# #print(center_mass[2])
+			# center_mass = center_mass + np.array([-0.5, -0.5, 1.5])
 			
 			
 
-		# Draw the pose annotation on the image.
-		image.flags.writeable = True
-		image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+		# # Draw the pose annotation on the image.
+		# image.flags.writeable = True
+		# image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
 
 			
@@ -263,11 +263,11 @@ with mp_pose.Pose(
 		
 		# mp_drawing.plot_landmarks(results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 		
-		if 'pixel_x' in locals() and 'pixel_y' in locals():
-			cv2.drawMarker(image, (pixel_x, pixel_y), (0, 255, 0), 
-						 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+		# if 'pixel_x' in locals() and 'pixel_y' in locals():
+		# 	cv2.drawMarker(image, (pixel_x, pixel_y), (0, 255, 0), 
+		# 				 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
 
-		cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
+		# cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
 
 		if cv2.waitKey(5) & 0xFF == 27:
 			break
