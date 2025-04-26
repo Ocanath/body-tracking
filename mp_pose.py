@@ -62,20 +62,7 @@ for p in port:
 print( "found ", len(slist), "ports.")
 
 # For webcam input:
-for i in [1, 2, 3, 4]:
-    print(f"Trying camera index {i}")
-    cap = cv2.VideoCapture(i)
-    if cap.isOpened():
-        print(f"Successfully opened camera {i}")
-        break
-    else:
-        print(f"Failed to open camera {i}")
-        cap.release()
-
-if not cap.isOpened():
-    print("Could not open any camera!")
-    exit(1)
-
+cap = cv2.VideoCapture(3)
 with mp_pose.Pose(
 	min_detection_confidence=0.5,
 	min_tracking_confidence=0.5) as pose:
@@ -276,11 +263,11 @@ with mp_pose.Pose(
 		
 		# mp_drawing.plot_landmarks(results.pose_world_landmarks, mp_pose.POSE_CONNECTIONS)
 		
-		if 'pixel_x' in locals() and 'pixel_y' in locals():
-			cv2.drawMarker(image, (pixel_x, pixel_y), (0, 255, 0), 
-						 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+		# if 'pixel_x' in locals() and 'pixel_y' in locals():
+		# 	cv2.drawMarker(image, (pixel_x, pixel_y), (0, 255, 0), 
+		# 				 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
 
-		cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
+		cv2.imshow('MediaPipe Pose', image)
 
 		if cv2.waitKey(5) & 0xFF == 27:
 			break
