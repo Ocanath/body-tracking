@@ -9,8 +9,6 @@ from scipy import signal
 from rtfilt import *
 from vect_tools import *
 import time
-import serial
-from serial.tools import list_ports
 from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
 import math

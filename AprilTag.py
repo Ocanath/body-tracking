@@ -2,6 +2,10 @@ import cv2
 import numpy as np
 import json
 import apriltag
+import math
+from serialhelper import create_sauron_position_payload, autoconnect_serial
+from sauron_ik import get_ik_angles_double
+
 
 def load_calibration(filename):
     """Load camera calibration parameters from a JSON file."""
@@ -15,6 +19,8 @@ def load_calibration(filename):
     return camera_matrix, dist_coeffs
 
 def main():
+    slist = autoconnect_serial()
+
     # Load camera calibration data
     camera_matrix, dist_coeffs = load_calibration('camera_calibration.json')
     
@@ -26,13 +32,15 @@ def main():
     
     # Define tag size in meters (adjust this based on your actual tag size)
     tag_size = 0.1  # 10cm
-    
+    direction_vector = np.array([0, 0, 0])
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Failed to grab frame")
             break
-            
+        
+        frame = cv2.undistort(frame, camera_matrix, dist_coeffs)
+
         # Convert to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
@@ -67,8 +75,8 @@ def main():
             
             if ret:
                 # Print the 3D position
-                print(f"Tag {detection.tag_id} position (x,y,z): {tvec.flatten()}")
-                
+                # print(f"Tag {detection.tag_id} position (x,y,z): {tvec.flatten()}")
+                direction_vector = tvec.flatten()
                 # Draw the center point
                 cv2.circle(frame, tuple(center), 5, (0, 0, 255), -1)
                 
@@ -94,6 +102,35 @@ def main():
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[2].ravel()), (0, 255, 0), 3)  # Y axis
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[3].ravel()), (0, 0, 255), 3)  # Z axis
         
+        # Use the direction vector for your application
+        x = -direction_vector[0]	#track sign inversion
+        y = -direction_vector[1]
+        z = direction_vector[2]
+        print(x, y, z)
+
+
+        xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
+        yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
+        try:    #NaN sometimes
+            theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
+            theta1 = int(theta1_rad*2**14)
+            theta2 = int(theta2_rad*2**14)
+            """
+                Todo:
+                Create a mechanism that uses some kind of user input
+                (keys, mouse, etc) which adjusts an offset to theta1 and theta2
+                before sending them out to the robot. This adjustment will correct
+                for any misalignment in the gimbal obtained with manual 'eyeballed' 
+                calibration. In order for this to work, the transformation from 
+                sperical origin to camera focal origin must be obtained.
+            """
+            pld = create_sauron_position_payload(theta1, theta2)
+            if(len(slist) != 0):
+                slist[0].write(pld)
+        except Exception as e:
+            print(f"Error: {e}")
+            pass
+
         # Display the frame
         cv2.imshow('AprilTag Detection', frame)
         
