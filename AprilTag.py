@@ -11,6 +11,9 @@ Calibration Steps:
 2. Use the keys to adjust the angle offsets until the laser is on the center of the tag
 3. Save the offset with a key press ('s')
 4. Confirm the accuracy of calibration by moving the tag around and observing the laser
+
+5. Looks like this isn't quite good enough. I think we also need a rotation matrix and to test parallel.
+
 """
 
 def load_calibration(filename):
@@ -42,6 +45,9 @@ def main():
 
     user_input_theta1_offset = 0
     user_input_theta2_offset = 0
+    x_offset = 0
+    y_offset = 0
+    z_offset = 0
     toggle_print_pos = False
     while True:
         ret, frame = cap.read()
@@ -49,7 +55,6 @@ def main():
             print("Failed to grab frame")
             break
         
-        frame = cv2.undistort(frame, camera_matrix, dist_coeffs)
 
         # Convert to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -113,9 +118,9 @@ def main():
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[3].ravel()), (0, 0, 255), 3)  # Z axis
         
         # Use the direction vector for your application
-        x = -direction_vector[0]	#track sign inversion
-        y = -direction_vector[1]
-        z = direction_vector[2]
+        x = -direction_vector[0] + x_offset	#track sign inversion
+        y = -(direction_vector[1] + 69.12e-3) + y_offset
+        z = (direction_vector[2] - 23.06e-3) + z_offset
         if toggle_print_pos:
             print(x, y, z)
 
@@ -126,8 +131,8 @@ def main():
         xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
         yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
         xf = xr
-        yf = yr - 69.12e-3
-        zf = z + 23.06e-3   #final step of Hg_c, transform FROM gimbal TO camera, is translation. We did mirroring and rotation already.
+        yf = yr
+        zf = z   #final step of Hg_c, transform FROM gimbal TO camera, is translation. We did mirroring and rotation already.
         try:    #NaN sometimes
             theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
             theta1 = int(theta1_rad*2**14)
@@ -169,9 +174,29 @@ def main():
         elif waitkeyResult == ord('f'):
             user_input_theta2_offset = user_input_theta2_offset - 10
             print(f"theta2_offset: {user_input_theta2_offset}")
+        elif waitkeyResult == ord('t'):
+            x_offset = x_offset + .01
+            print(f"x_offset: {x_offset}")
+        elif waitkeyResult == ord('g'):
+            x_offset = x_offset - 0.01
+            print(f"x_offset: {x_offset}")
+        elif waitkeyResult == ord('y'):
+            y_offset = y_offset + 0.01
+            print(f"y_offset: {y_offset}")
+        elif waitkeyResult == ord('h'):
+            y_offset = y_offset - 0.01
+            print(f"y_offset: {y_offset}")
+        elif waitkeyResult == ord('u'):
+            z_offset = z_offset + 0.01
+            print(f"z_offset: {z_offset}")
+        elif waitkeyResult == ord('j'):
+            z_offset = z_offset - 0.01
+            print(f"z_offset: {z_offset}")
         elif waitkeyResult == ord('p'):
             toggle_print_pos = not toggle_print_pos
             print(f"toggle_print_pos: {toggle_print_pos}")
+        elif waitkeyResult == ord('s'):
+            pass
             
     cap.release()
     cv2.destroyAllWindows()

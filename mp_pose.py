@@ -188,8 +188,6 @@ with mp_pose.Pose(
 			x = -direction_vector[0]	#track sign inversion
 			y = -direction_vector[1]
 			z = direction_vector[2]
-
-
 			xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
 			yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
 			theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
