@@ -31,7 +31,7 @@ def main():
     cap = cv2.VideoCapture(3)  # Adjust this index if needed
     
     # Define tag size in meters (adjust this based on your actual tag size)
-    tag_size = 0.1  # 10cm
+    tag_size = 0.07  # 7cm
     direction_vector = np.array([0, 0, 0])
     while True:
         ret, frame = cap.read()
