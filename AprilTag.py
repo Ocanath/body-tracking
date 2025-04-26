@@ -5,7 +5,13 @@ import apriltag
 import math
 from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
-
+"""
+Calibration Steps:
+1. Verify apriltag size and that the position estimate is correct
+2. Use the keys to adjust the angle offsets until the laser is on the center of the tag
+3. Save the offset with a key press ('s')
+4. Confirm the accuracy of calibration by moving the tag around and observing the laser
+"""
 
 def load_calibration(filename):
     """Load camera calibration parameters from a JSON file."""
