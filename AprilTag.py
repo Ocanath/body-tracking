@@ -42,6 +42,7 @@ def main():
 
     user_input_theta1_offset = 0
     user_input_theta2_offset = 0
+    toggle_print_pos = False
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -115,7 +116,8 @@ def main():
         x = -direction_vector[0]	#track sign inversion
         y = -direction_vector[1]
         z = direction_vector[2]
-        print(x, y, z)
+        if toggle_print_pos:
+            print(x, y, z)
 
 
 
@@ -156,17 +158,20 @@ def main():
         if waitkeyResult == ord('q'):
             break
         elif waitkeyResult == ord('e'):
-            user_input_theta1_offset = user_input_theta1_offset + 1
+            user_input_theta1_offset = user_input_theta1_offset + 10
             print(f"theta1_offset: {user_input_theta1_offset}")
         elif waitkeyResult == ord('d'):
-            user_input_theta1_offset = user_input_theta1_offset - 1
+            user_input_theta1_offset = user_input_theta1_offset - 10
             print(f"theta1_offset: {user_input_theta1_offset}")
         elif waitkeyResult == ord('r'):
-            user_input_theta2_offset = user_input_theta2_offset + 1
+            user_input_theta2_offset = user_input_theta2_offset + 10
             print(f"theta2_offset: {user_input_theta2_offset}")
         elif waitkeyResult == ord('f'):
-            user_input_theta2_offset = user_input_theta2_offset - 1
+            user_input_theta2_offset = user_input_theta2_offset - 10
             print(f"theta2_offset: {user_input_theta2_offset}")
+        elif waitkeyResult == ord('p'):
+            toggle_print_pos = not toggle_print_pos
+            print(f"toggle_print_pos: {toggle_print_pos}")
             
     cap.release()
     cv2.destroyAllWindows()
