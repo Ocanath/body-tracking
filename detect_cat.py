@@ -2,7 +2,9 @@ from ultralytics import YOLO
 import cv2
 import json
 import numpy as np
-
+import math
+from serialhelper import create_sauron_position_payload, autoconnect_serial
+from sauron_ik import get_ik_angles_double
 # 1) Load the nano model
 model = YOLO('yolov8n.pt')
 
@@ -59,6 +61,8 @@ except Exception as e:
 	print(f"Error loading calibration data: {e}")
 	print("Using default camera parameters")
 
+
+slist = autoconnect_serial()
 # 2) Open your camera
 cap = cv2.VideoCapture(3)
 catxlocation = 10
@@ -91,7 +95,21 @@ while True:
             print(f"catpix = {catxlocation}, {catylocation}, tvec = {direction_vector}")
 
     cv2.drawMarker(frame, (catxlocation, catylocation), (0, 255, 0), 
- 				 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+                 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+
+    x = -direction_vector[0]    #track sign inversion
+    y = -direction_vector[1]
+    z = direction_vector[2]
+    try:
+        xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
+        yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
+        theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
+        theta1 = int(theta1_rad*2**14)
+        theta2 = int(theta2_rad*2**14)
+        pld = create_sauron_position_payload(theta1, theta2)
+        slist[0].write(pld)
+    except Exception as e:
+        print(f"Error calculating IK angles: {e}")
 
     # 5) Show it
     cv2.imshow('Real-time Cat Detector', frame)
