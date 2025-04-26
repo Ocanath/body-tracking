@@ -11,10 +11,9 @@ from vect_tools import *
 import time
 import serial
 from serial.tools import list_ports
-from serialhelper import create_sauron_position_payload
+from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
 import math
-import pickle
 
 """
 fx 	0 	cx
@@ -33,33 +32,8 @@ lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='
 
 
 
-""" 
-	Find a serial com port.
-"""
-com_ports_list = list(list_ports.comports())
-port = []
-slist = []
-for p in com_ports_list:
-	if(p):
-		pstr = ""
-		pstr = p
-		port.append(pstr)
-		print("Found:", pstr)
-if not port:
-	print("No port found")
-
-for p in port:
-	try:
-		ser = []
-		ser = (serial.Serial(p[0],'2000000', timeout = 0))
-		slist.append(ser)
-		print ("connected!", p)
-		break
-		# print ("found: ", p)
-	except:
-		print("failded.")
-		pass
-print( "found ", len(slist), "ports.")
+slist = autoconnect_serial()
+ser = slist[0]
 
 # For webcam input:
 cap = cv2.VideoCapture(3)

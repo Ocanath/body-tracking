@@ -1,5 +1,7 @@
 import struct
 from PPP_stuffing import PPP_stuff
+import serial
+from serial.tools import list_ports
 
 def fletchers_checksum16(data: bytes) -> int:
     """Calculate Fletcher's checksum for 16-bit words"""
@@ -40,3 +42,36 @@ def create_sauron_position_payload(th1: int, th2: int) -> bytes:
     stuffed_payload = PPP_stuff(payload)
     
     return stuffed_payload
+
+
+
+def autoconnect_serial():
+	""" 
+		Find a serial com port.
+	"""
+	com_ports_list = list(list_ports.comports())
+	port = []
+	slist = []
+	for p in com_ports_list:
+		if(p):
+			pstr = ""
+			pstr = p
+			port.append(pstr)
+			print("Found:", pstr)
+	if not port:
+		print("No port found")
+
+	for p in port:
+		try:
+			ser = []
+			ser = (serial.Serial(p[0],'2000000', timeout = 0))
+			slist.append(ser)
+			print ("connected!", p)
+			break
+			# print ("found: ", p)
+		except:
+			print("failded.")
+			pass
+	print( "found ", len(slist), "ports.")
+	return slist
+
