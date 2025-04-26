@@ -39,6 +39,9 @@ def main():
     # Define tag size in meters (adjust this based on your actual tag size)
     tag_size = 0.07  # 7cm
     direction_vector = np.array([0, 0, 0])
+
+    user_input_theta1_offset = 0
+    user_input_theta2_offset = 0
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -115,6 +118,9 @@ def main():
         print(x, y, z)
 
 
+
+
+
         xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
         yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
         xf = xr
@@ -124,6 +130,8 @@ def main():
             theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
             theta1 = int(theta1_rad*2**14)
             theta2 = int(theta2_rad*2**14)
+            theta1 = theta1 + user_input_theta1_offset
+            theta2 = theta2 + user_input_theta2_offset
             """
                 Todo:
                 Create a mechanism that uses some kind of user input
@@ -140,13 +148,26 @@ def main():
             print(f"Error: {e}")
             pass
 
+
         # Display the frame
         cv2.imshow('AprilTag Detection', frame)
-        
+        waitkeyResult= cv2.waitKey(1) & 0xFF
         # Break the loop if 'q' is pressed
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if waitkeyResult == ord('q'):
             break
-    
+        elif waitkeyResult == ord('e'):
+            user_input_theta1_offset = user_input_theta1_offset + 1
+            print(f"theta1_offset: {user_input_theta1_offset}")
+        elif waitkeyResult == ord('d'):
+            user_input_theta1_offset = user_input_theta1_offset - 1
+            print(f"theta1_offset: {user_input_theta1_offset}")
+        elif waitkeyResult == ord('r'):
+            user_input_theta2_offset = user_input_theta2_offset + 1
+            print(f"theta2_offset: {user_input_theta2_offset}")
+        elif waitkeyResult == ord('f'):
+            user_input_theta2_offset = user_input_theta2_offset - 1
+            print(f"theta2_offset: {user_input_theta2_offset}")
+            
     cap.release()
     cv2.destroyAllWindows()
 

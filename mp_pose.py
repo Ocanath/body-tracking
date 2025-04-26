@@ -242,6 +242,9 @@ with mp_pose.Pose(
 		# 	cv2.drawMarker(image, (pixel_x, pixel_y), (0, 255, 0), 
 		# 				 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
 
+
+		# Note: imshow and waitKey are blocking and can have performance impacts.
+		#remove them if you want to run at max speed
 		cv2.imshow('MediaPipe Pose', image)
 
 		if cv2.waitKey(5) & 0xFF == 27:
