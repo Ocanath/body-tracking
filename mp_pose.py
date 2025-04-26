@@ -193,8 +193,8 @@ with mp_pose.Pose(
 			xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
 			yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
 			xf = xr
-			yf = yr - 0.01
-			zf = z + 0.02   #final step of Hg_c, transform FROM gimbal TO camera, is translation. We did mirroring and rotation already.
+			yf = yr - 69.12e-3
+			zf = z + 23.06e-3   #final step of Hg_c, transform FROM gimbal TO camera, is translation. We did mirroring and rotation already.
 			theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
 			theta1 = int(theta1_rad*2**14)
 			theta2 = int(theta2_rad*2**14)
