@@ -16,7 +16,7 @@ Calibration Steps:
 
 """
 
-def load_calibration(filename):
+def load_camera_calibration(filename):
     """Load camera calibration parameters from a JSON file."""
     with open(filename, 'r') as f:
         data = json.load(f)
@@ -27,12 +27,31 @@ def load_calibration(filename):
     
     return camera_matrix, dist_coeffs
 
+
+def load_robot_calibration(filename):
+    """Load robot calibration parameters from a JSON file."""
+    with open(filename, 'r') as f:
+        data = json.load(f)
+    return data['theta1_offset'], data['theta2_offset']
+
+
+def save_robot_calibration(filename, theta1_offset, theta2_offset):
+    """Save calibration parameters to a JSON file."""
+    data = {
+        "theta1_offset": theta1_offset,
+        "theta2_offset": theta2_offset
+    }
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
+    print(f"Calibration parameters saved to {filename}")
+
 def main():
     slist = autoconnect_serial()
 
     # Load camera calibration data
-    camera_matrix, dist_coeffs = load_calibration('camera_calibration.json')
-    
+    camera_matrix, dist_coeffs = load_camera_calibration('camera_calibration.json')
+    user_input_theta1_offset, user_input_theta2_offset = load_robot_calibration('robot_calibration.json')
+    print(f"Loaded robot offsets: {user_input_theta1_offset}, {user_input_theta2_offset}")
     # Initialize AprilTag detector
     detector = apriltag.Detector()
     
@@ -43,12 +62,11 @@ def main():
     tag_size = 0.07  # 7cm
     direction_vector = np.array([0, 0, 0])
 
-    user_input_theta1_offset = 0
-    user_input_theta2_offset = 0
     x_offset = 0
     y_offset = 0
     z_offset = 0
     toggle_print_pos = False
+    toggle_lock_thetas = False
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -137,8 +155,12 @@ def main():
             theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
             theta1 = int(theta1_rad*2**14)
             theta2 = int(theta2_rad*2**14)
-            theta1 = theta1 + user_input_theta1_offset
-            theta2 = theta2 + user_input_theta2_offset
+            if toggle_lock_thetas:
+                theta1 = 0 + user_input_theta1_offset
+                theta2 = 0 + user_input_theta2_offset
+            else:
+                theta1 = theta1 + user_input_theta1_offset
+                theta2 = theta2 + user_input_theta2_offset
             """
                 Todo:
                 Create a mechanism that uses some kind of user input
@@ -195,8 +217,11 @@ def main():
         elif waitkeyResult == ord('p'):
             toggle_print_pos = not toggle_print_pos
             print(f"toggle_print_pos: {toggle_print_pos}")
+        elif waitkeyResult == ord('l'):
+            toggle_lock_thetas = not toggle_lock_thetas
+            print(f"toggle_lock_thetas: {toggle_lock_thetas}")
         elif waitkeyResult == ord('s'):
-            pass
+            save_robot_calibration("robot_calibration.json", user_input_theta1_offset, user_input_theta2_offset)
             
     cap.release()
     cv2.destroyAllWindows()
