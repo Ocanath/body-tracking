@@ -68,53 +68,76 @@ cap = cv2.VideoCapture(3)
 catxlocation = 10
 catylocation = 10
 direction_vector = np.array([0, 0, 0])
+x_offset = 0
+y_offset = 0
+z_offset = 0
 while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+	ret, frame = cap.read()
+	if not ret:
+		break
 
-    # 3) Detect only cats (COCO class id 15), streaming for speed
-    results = model.predict(frame, classes=[15], stream=True, verbose=False)
+	# 3) Detect only cats (COCO class id 15), streaming for speed
+	results = model.predict(frame, classes=[15], stream=True, verbose=False)
 
-    # 4) Draw bboxes & confidences
-    for r in results:
-        for box in r.boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            conf = box.conf[0].item()
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame,
-                        f"Cat {conf:.5f}",
-                        (x1, y1 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (0, 255, 0),
-                        2)
-            catxlocation = int((x1 + x2) / 2)
-            catylocation = int((y1 + y2) / 2)
-            direction_vector = pixel_to_direction_vector(catxlocation, catylocation, camera_matrix)
-            print(f"catpix = {catxlocation}, {catylocation}, tvec = {direction_vector}")
+	# 4) Draw bboxes & confidences
+	for r in results:
+		for box in r.boxes:
+			x1, y1, x2, y2 = map(int, box.xyxy[0])
+			conf = box.conf[0].item()
+			cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+			cv2.putText(frame,
+						f"Cat {conf:.5f}",
+						(x1, y1 - 10),
+						cv2.FONT_HERSHEY_SIMPLEX,
+						0.5,
+						(0, 255, 0),
+						2)
+			catxlocation = int((x1 + x2) / 2)
+			catylocation = int((y1 + y2) / 2)
+			direction_vector = pixel_to_direction_vector(catxlocation, catylocation, camera_matrix)
+			print(f"catpix = {catxlocation}, {catylocation}, tvec = {direction_vector}")
 
-    cv2.drawMarker(frame, (catxlocation, catylocation), (0, 255, 0), 
-                 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+	cv2.drawMarker(frame, (catxlocation, catylocation), (0, 255, 0), 
+				 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
 
-    x = -direction_vector[0]    #track sign inversion
-    y = -direction_vector[1]
-    z = direction_vector[2]
-    try:
-        xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
-        yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-        theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
-        theta1 = int(theta1_rad*2**14)
-        theta2 = int(theta2_rad*2**14)
-        pld = create_sauron_position_payload(theta1, theta2)
-        slist[0].write(pld)
-    except Exception as e:
-        print(f"Error calculating IK angles: {e}")
+	x = -direction_vector[0] + x_offset	#track sign inversion
+	y = -direction_vector[1] + y_offset
+	z = direction_vector[2] + z_offset
+	try:
+		xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
+		yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
+		theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
+		theta1 = int(theta1_rad*2**14)
+		theta2 = int(theta2_rad*2**14)
+		pld = create_sauron_position_payload(theta1, theta2)
+		slist[0].write(pld)
+	except Exception as e:
+		print(f"Error calculating IK angles: {e}")
 
-    # 5) Show it
-    cv2.imshow('Real-time Cat Detector', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+	# 5) Show it
+	cv2.imshow('Real-time Cat Detector', frame)
+	waitkeyResult= cv2.waitKey(1) & 0xFF
+	# Break the loop if 'q' is pressed
+	if waitkeyResult == ord('q'):
+		break
+	elif waitkeyResult == ord('t'):
+		x_offset = x_offset + 0.005
+		print(f"x_offset: {x_offset}")
+	elif waitkeyResult == ord('g'):
+		x_offset = x_offset - 0.005
+		print(f"x_offset: {x_offset}")
+	elif waitkeyResult == ord('y'):
+		y_offset = y_offset + 0.005
+		print(f"y_offset: {y_offset}")
+	elif waitkeyResult == ord('h'):
+		y_offset = y_offset - 0.005
+		print(f"y_offset: {y_offset}")
+	elif waitkeyResult == ord('u'):
+		z_offset = z_offset + 0.005
+		print(f"z_offset: {z_offset}")
+	elif waitkeyResult == ord('j'):
+		z_offset = z_offset - 0.005
+		print(f"z_offset: {z_offset}")
 
 cap.release()
 cv2.destroyAllWindows()
