@@ -30,9 +30,13 @@ def load_camera_calibration(filename):
 
 def load_robot_calibration(filename):
     """Load robot calibration parameters from a JSON file."""
-    with open(filename, 'r') as f:
-        data = json.load(f)
-    return data['theta1_offset'], data['theta2_offset']
+    try:
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        return data['theta1_offset'], data['theta2_offset']
+    except FileNotFoundError:
+        print(f"File {filename} not found, loading zeros")
+        return 0, 0
 
 
 def save_robot_calibration(filename, theta1_offset, theta2_offset):
