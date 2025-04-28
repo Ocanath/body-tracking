@@ -58,7 +58,9 @@ def main():
         if not ret:
             print("Failed to grab frame")
             break
-        
+        # Undistort the image using calibration data
+        frame = cv2.undistort(frame, camera_matrix, dist_coeffs)
+
         # Draw crosshair at mouse position
         cv2.drawMarker(frame, (mouse_x, mouse_y), (0, 255, 0), 
                       markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
@@ -127,6 +129,20 @@ def main():
         elif key == ord('j'):
             z_offset -= 0.01
             print(f"z_offset: {z_offset}")
+        elif key == ord('e'):
+            user_input_theta1_offset = user_input_theta1_offset + 10
+            print(f"theta1_offset: {user_input_theta1_offset}")
+        elif key == ord('d'):
+            user_input_theta1_offset = user_input_theta1_offset - 10
+            print(f"theta1_offset: {user_input_theta1_offset}")
+        elif key == ord('r'):
+            user_input_theta2_offset = user_input_theta2_offset + 10
+            print(f"theta2_offset: {user_input_theta2_offset}")
+        elif key == ord('f'):
+            user_input_theta2_offset = user_input_theta2_offset - 10
+            print(f"theta2_offset: {user_input_theta2_offset}")
+        elif key == ord('s'):
+            save_robot_calibration("robot_calibration.json", user_input_theta1_offset, user_input_theta2_offset)
         elif key == ord(' '):
             # Save image
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
