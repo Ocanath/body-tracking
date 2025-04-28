@@ -144,14 +144,17 @@ def main():
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[1].ravel()), (255, 0, 0), 3)  # X axis
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[2].ravel()), (0, 255, 0), 3)  # Y axis
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[3].ravel()), (0, 0, 255), 3)  # Z axis
-        
+
+        dvn = direction_vector / np.linalg.norm(direction_vector)
+        if toggle_print_pos:
+            print(f"d={dvn},yaw={yaw_angle}")
+
         # Use the direction vector for your application
         x = -direction_vector[0] + x_offset	#track sign inversion
         y = -(direction_vector[1] + 69.12e-3) + y_offset
         z = (direction_vector[2] - 23.06e-3) + z_offset
 
-        if toggle_print_pos:
-            print(x, y, z, yaw_angle)
+        
 
 
 
