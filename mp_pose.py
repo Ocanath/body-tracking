@@ -12,6 +12,7 @@ import time
 from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
 import math
+from calibration_helper import load_camera_calibration, pixel_to_direction_vector
 
 """
 fx 	0 	cx
@@ -24,11 +25,7 @@ fx, fy is focal length
 fx=fy on most cameras
 """
 
- 
- 
 lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='butter', output='sos', fs=30)	#filter for the fps counter
-
-
 
 slist = autoconnect_serial()
 ser = slist[0]
@@ -62,20 +59,9 @@ with mp_pose.Pose(
 		pixel_y = int(y * image_height)
 		return pixel_x, pixel_y
 
-	def load_calibration(filename):
-		"""Load calibration parameters from a JSON file."""
-		with open(filename, 'r') as f:
-			data = json.load(f)
-		
-		# Convert lists back to numpy arrays
-		camera_matrix = np.array(data['camera_matrix'])
-		dist_coeffs = np.array(data['dist_coeffs'])
-		
-		return camera_matrix, dist_coeffs
-
 	# Load camera calibration data
 	try:
-		camera_matrix, dist_coeffs = load_calibration('camera_calibration.json')
+		camera_matrix, dist_coeffs = load_camera_calibration('camera_calibration.json')
 		print("Successfully loaded camera calibration data")
 		print("fx = ", camera_matrix[0,0])
 		print("fy = ", camera_matrix[1,1])
@@ -84,36 +70,6 @@ with mp_pose.Pose(
 	except Exception as e:
 		print(f"Error loading calibration data: {e}")
 		print("Using default camera parameters")
-
-
-	def pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix):
-		"""
-		Convert pixel coordinates to a real-world direction vector from the camera's optical center.
-		
-		Args:
-			pixel_x, pixel_y: Pixel coordinates in the image
-			camera_matrix: 3x3 camera matrix [fx, 0, cx; 0, fy, cy; 0, 0, 1]
-		
-		Returns:
-			direction_vector: 3D unit vector pointing from camera center to the point
-		"""
-		# Get camera parameters from matrix
-		fx = camera_matrix[0,0]
-		fy = camera_matrix[1,1]
-		cx = camera_matrix[0,2]
-		cy = camera_matrix[1,2]
-		
-		# Convert pixel coordinates to normalized image coordinates
-		x = (pixel_x - cx) / fx
-		y = (pixel_y - cy) / fy
-		
-		# Create direction vector (z=1 for normalized coordinates)
-		direction = np.array([x, y, 1.0])
-		
-		# Normalize to unit vector
-		direction = direction / np.linalg.norm(direction)
-		
-		return direction
 
 	while cap.isOpened():
 	
