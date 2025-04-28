@@ -5,6 +5,7 @@ import apriltag
 import math
 from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
+from datetime import datetime
 """
 Calibration Steps:
 1. Verify apriltag size and that the position estimate is correct
@@ -232,6 +233,15 @@ def main():
             print(f"toggle_lock_thetas: {toggle_lock_thetas}")
         elif waitkeyResult == ord('s'):
             save_robot_calibration("robot_calibration.json", user_input_theta1_offset, user_input_theta2_offset)
+        elif waitkeyResult == ord(' '):
+            # Generate filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"calibration-images/image_{timestamp}.png"
+            
+            # Save the image
+            cv2.imwrite(filename, frame)
+            print(f"Image saved as {filename}")
+
             
     cap.release()
     cv2.destroyAllWindows()

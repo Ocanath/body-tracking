@@ -5,6 +5,8 @@ import numpy as np
 import math
 from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
+from datetime import datetime
+
 # 1) Load the nano model
 model = YOLO('yolov8n.pt')
 
@@ -64,7 +66,7 @@ except Exception as e:
 
 slist = autoconnect_serial()
 # 2) Open your camera
-cap = cv2.VideoCapture(3)
+cap = cv2.VideoCapture(2)
 catxlocation = 10
 catylocation = 10
 direction_vector = np.array([0, 0, 0])
@@ -138,6 +140,14 @@ while True:
 	elif waitkeyResult == ord('j'):
 		z_offset = z_offset - 0.005
 		print(f"z_offset: {z_offset}")
+	elif waitkeyResult == ord(' '):
+		# Generate filename with timestamp
+		timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+		filename = f"calibration-images/image_{timestamp}.png"
+		
+		# Save the image
+		cv2.imwrite(filename, frame)
+		print(f"Image saved as {filename}")
 
 cap.release()
 cv2.destroyAllWindows()
