@@ -1,10 +1,9 @@
 import cv2
 import numpy as np
 import math
-from serialhelper import create_sauron_position_payload, autoconnect_serial
-from sauron_ik import get_ik_angles_double
+from serialhelper import  autoconnect_serial, pixel_to_payload
 from datetime import datetime
-from calibration_helper import load_camera_calibration, load_robot_calibration, save_robot_calibration, pixel_to_direction_vector
+from calibration_helper import load_camera_calibration, load_robot_calibration, save_robot_calibration
 
 # Global variables for mouse callback
 mouse_x = 0
@@ -64,38 +63,9 @@ def main():
         # Draw crosshair at mouse position
         cv2.drawMarker(frame, (mouse_x, mouse_y), (0, 255, 0), 
                       markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
-        
-        # Convert mouse position to direction vector
-        direction_vector = pixel_to_direction_vector(mouse_x, mouse_y, camera_matrix)
-        
-        if toggle_print_pos:
-            print(f"Mouse position: ({mouse_x}, {mouse_y})")
-            print(f"Direction vector: {direction_vector}")
-        
-        direction_vector[0] = -direction_vector[0]# track sign inversion
-        direction_vector[1] = -direction_vector[1]
-        direction_vector[2] = direction_vector[2]
-        direction_vector = direction_vector * target_distance + g2c_offset
-        x = direction_vector[0]  
-        y = direction_vector[1]
-        z = direction_vector[2]
-        
-        # Apply rotation and calculate IK angles
-        xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
-        yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-        xf = xr
-        yf = yr
-        zf = z
-        
+                
         try:
-            theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
-            theta1 = int(theta1_rad*2**14)
-            theta2 = int(theta2_rad*2**14)
-            
-            theta1 = theta1 + user_input_theta1_offset
-            theta2 = theta2 + user_input_theta2_offset
-            
-            pld = create_sauron_position_payload(theta1, theta2)
+            pld = pixel_to_payload(mouse_x, mouse_y, camera_matrix, target_distance, g2c_offset, [user_input_theta1_offset, user_input_theta2_offset])
             if len(slist) != 0:
                 slist[0].write(pld)
         except Exception as e:

@@ -2,6 +2,10 @@ import struct
 from PPP_stuffing import PPP_stuff
 import serial
 from serial.tools import list_ports
+from calibration_helper import pixel_to_direction_vector
+import math
+from sauron_ik import get_ik_angles_double
+
 
 def fletchers_checksum16(data: bytes) -> int:
     """Calculate Fletcher's checksum for 16-bit words"""
@@ -75,3 +79,29 @@ def autoconnect_serial():
 	print( "found ", len(slist), "ports.")
 	return slist
 
+def pixel_to_payload(pixel_x, pixel_y, camera_matrix, dist, g2c_offset, q_offset):
+	direction_vector = pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix)
+	direction_vector[0] = -direction_vector[0]# track sign inversion
+	direction_vector[1] = -direction_vector[1]
+	direction_vector[2] = direction_vector[2]
+	direction_vector = direction_vector * dist + g2c_offset
+	x = direction_vector[0]  
+	y = direction_vector[1]
+	z = direction_vector[2]
+	
+	# Apply rotation and calculate IK angles
+	xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
+	yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
+	xf = xr
+	yf = yr
+	zf = z
+		
+	theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
+	theta1 = int(theta1_rad*2**14)
+	theta2 = int(theta2_rad*2**14)
+	
+	theta1 = theta1 + q_offset[0]
+	theta2 = theta2 + q_offset[1]
+	
+	pld = create_sauron_position_payload(theta1, theta2)
+	return pld
