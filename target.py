@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
 import math
-from serialhelper import  autoconnect_serial, pixel_to_payload
+from serialhelper import  autoconnect_serial, create_sauron_position_payload
 from datetime import datetime
 from calibration_helper import load_camera_calibration, load_robot_calibration, save_robot_calibration
+from sauron_ik import pixel_to_thetas
 
 # Global variables for mouse callback
 mouse_x = 0
@@ -51,7 +52,7 @@ def main():
     print("  - 'u/j' to adjust z offset")
     print("  - 's' to save calibration")
     print("  - Space to save image")
-    direction_vector = np.array([0, 0, 1])
+    
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -65,7 +66,9 @@ def main():
                       markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
                 
         try:
-            pld = pixel_to_payload(mouse_x, mouse_y, camera_matrix, dist=target_distance, g2c_offset=g2c_offset, q_offset=[user_input_theta1_offset, user_input_theta2_offset])
+            
+            theta1, theta2 = pixel_to_thetas(mouse_x, mouse_y, camera_matrix, dist=target_distance, g2c_offset=g2c_offset, q_offset=[user_input_theta1_offset, user_input_theta2_offset])
+            pld = create_sauron_position_payload(theta1, theta2)
             if len(slist) != 0:
                 slist[0].write(pld)
         except Exception as e:

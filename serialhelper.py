@@ -78,39 +78,3 @@ def autoconnect_serial():
 			pass
 	print( "found ", len(slist), "ports.")
 	return slist
-
-
-"""
-This function takes in a pixel coordinate, a camera matrix, a distance, and a g2c offset.
-For a parallel vector result, set the distance to 1 and the g2c offset to 0. This is equivalent to
-an infinite distance to the target with a g2c offset corresponding to the correct camera position relative to the laser gimbal.
-
-If you have an accurate distance to the target, set dist equal to that distance and use the g2c offset from the robot itself; that should be
-
-"""
-def pixel_to_payload(pixel_x, pixel_y, camera_matrix, dist=1, g2c_offset=np.array([0, 0, 0]), q_offset=np.array([0, 0])):
-	direction_vector = pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix)
-	direction_vector[0] = -direction_vector[0]# track sign inversion
-	direction_vector[1] = -direction_vector[1]
-	direction_vector[2] = direction_vector[2]
-	direction_vector = direction_vector * dist + g2c_offset
-	x = direction_vector[0]  
-	y = direction_vector[1]
-	z = direction_vector[2]
-	
-	# Apply rotation and calculate IK angles
-	xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
-	yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-	xf = xr
-	yf = yr
-	zf = z
-		
-	theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
-	theta1 = int(theta1_rad*2**14)
-	theta2 = int(theta2_rad*2**14)
-	
-	theta1 = theta1 + q_offset[0]
-	theta2 = theta2 + q_offset[1]
-	
-	pld = create_sauron_position_payload(theta1, theta2)
-	return pld

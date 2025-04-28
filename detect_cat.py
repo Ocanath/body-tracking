@@ -6,54 +6,13 @@ import math
 from serialhelper import create_sauron_position_payload, autoconnect_serial
 from sauron_ik import get_ik_angles_double
 from datetime import datetime
-
+from calibration_helper import load_camera_calibration, pixel_to_direction_vector
 # 1) Load the nano model
 model = YOLO('yolov8n.pt')
 
 
-def load_calibration(filename):
-	"""Load calibration parameters from a JSON file."""
-	with open(filename, 'r') as f:
-		data = json.load(f)
-	
-	# Convert lists back to numpy arrays
-	camera_matrix = np.array(data['camera_matrix'])
-	dist_coeffs = np.array(data['dist_coeffs'])
-	
-	return camera_matrix, dist_coeffs
-
-def pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix):
-	"""
-	Convert pixel coordinates to a real-world direction vector from the camera's optical center.
-	
-	Args:
-		pixel_x, pixel_y: Pixel coordinates in the image
-		camera_matrix: 3x3 camera matrix [fx, 0, cx; 0, fy, cy; 0, 0, 1]
-	
-	Returns:
-		direction_vector: 3D unit vector pointing from camera center to the point
-	"""
-	# Get camera parameters from matrix
-	fx = camera_matrix[0,0]
-	fy = camera_matrix[1,1]
-	cx = camera_matrix[0,2]
-	cy = camera_matrix[1,2]
-	
-	# Convert pixel coordinates to normalized image coordinates
-	x = (pixel_x - cx) / fx
-	y = (pixel_y - cy) / fy
-	
-	# Create direction vector (z=1 for normalized coordinates)
-	direction = np.array([x, y, 1.0])
-	
-	# Normalize to unit vector
-	direction = direction / np.linalg.norm(direction)
-	
-	return direction
-
-
 try:
-	camera_matrix, dist_coeffs = load_calibration('camera_calibration.json')
+	camera_matrix, dist_coeffs = load_camera_calibration('camera_calibration.json')
 	print("Successfully loaded camera calibration data")
 	print("fx = ", camera_matrix[0,0])
 	print("fy = ", camera_matrix[1,1])
@@ -69,7 +28,7 @@ slist = autoconnect_serial()
 cap = cv2.VideoCapture(2)
 catxlocation = 10
 catylocation = 10
-direction_vector = np.array([0, 0, 0])
+direction = np.array([0, 0, 0])
 x_offset = 0
 y_offset = 0
 z_offset = 0
@@ -96,15 +55,15 @@ while True:
 						2)
 			catxlocation = int((x1 + x2) / 2)
 			catylocation = int((y1 + y2) / 2)
-			direction_vector = pixel_to_direction_vector(catxlocation, catylocation, camera_matrix)
-			print(f"catpix = {catxlocation}, {catylocation}, tvec = {direction_vector}")
+			direction = pixel_to_direction_vector(catxlocation, catylocation, camera_matrix)
+			print(f"catpix = {catxlocation}, {catylocation}, tvec = {direction}")
 
 	cv2.drawMarker(frame, (catxlocation, catylocation), (0, 255, 0), 
 				 markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
 
-	x = -direction_vector[0] + x_offset	#track sign inversion
-	y = -direction_vector[1] + y_offset
-	z = direction_vector[2] + z_offset
+	x = -direction[0] + x_offset	#track sign inversion
+	y = -direction[1] + y_offset
+	z = direction[2] + z_offset
 	try:
 		xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
 		yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)

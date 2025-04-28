@@ -4,7 +4,7 @@ import json
 import apriltag
 import math
 from serialhelper import create_sauron_position_payload, autoconnect_serial
-from sauron_ik import get_ik_angles_double
+from sauron_ik import xyz_to_thetas
 from datetime import datetime
 """
 Calibration Steps:
@@ -65,7 +65,7 @@ def main():
     
     # Define tag size in meters (adjust this based on your actual tag size)
     tag_size = 0.07  # 7cm
-    direction_vector = np.array([0, 0, 0])
+    xyz_vector = np.array([0, 0, 0])
     yaw_angle = 0
     x_offset = 0
     y_offset = 0
@@ -116,7 +116,7 @@ def main():
             if ret:
                 # Print the 3D position
                 # print(f"Tag {detection.tag_id} position (x,y,z): {tvec.flatten()}")
-                direction_vector = tvec.flatten()
+                xyz_vector = tvec.flatten()
                 # Convert rotation vector to rotation matrix
                 R, _ = cv2.Rodrigues(rvec)
                 # Extract yaw angle (rotation around z-axis)
@@ -147,37 +147,17 @@ def main():
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[2].ravel()), (0, 255, 0), 3)  # Y axis
                 cv2.line(frame, tuple(imgpts[0].ravel()), tuple(imgpts[3].ravel()), (0, 0, 255), 3)  # Z axis
 
-        dvn = direction_vector / np.linalg.norm(direction_vector)
+        dvn = xyz_vector / np.linalg.norm(xyz_vector)
         if toggle_print_pos:
             print(f"d={dvn},yaw={yaw_angle}")
 
-
-        # Use the direction vector for your application
-        x = -direction_vector[0] + x_offset	#track sign inversion
-        y = -(direction_vector[1]) - 69.12e-3 + y_offset
-        z = direction_vector[2] + 23.06e-3 + z_offset
-
-        
-
-
-
-
-
-        xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
-        yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-        xf = xr
-        yf = yr
-        zf = z   #final step of Hg_c, transform FROM gimbal TO camera, is translation. We did mirroring and rotation already.
         try:    #NaN sometimes
-            theta1_rad, theta2_rad = get_ik_angles_double(xf, yf, zf)
-            theta1 = int(theta1_rad*2**14)
-            theta2 = int(theta2_rad*2**14)
+            theta1,theta2 = xyz_to_thetas(xyz_vector, q_offset=[user_input_theta1_offset, user_input_theta2_offset])
+
             if toggle_lock_thetas:
                 theta1 = 0 + user_input_theta1_offset
                 theta2 = 0 + user_input_theta2_offset
-            else:
-                theta1 = theta1 + user_input_theta1_offset
-                theta2 = theta2 + user_input_theta2_offset
+
             """
                 Todo:
                 Create a mechanism that uses some kind of user input
