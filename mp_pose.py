@@ -10,9 +10,9 @@ from rtfilt import *
 from vect_tools import *
 import time
 from serialhelper import create_sauron_position_payload, autoconnect_serial
-from sauron_ik import get_ik_angles_double
+from sauron_ik import pixel_to_thetas
 import math
-from calibration_helper import load_camera_calibration, pixel_to_direction_vector
+from calibration_helper import load_camera_calibration, load_robot_calibration
 
 """
 fx 	0 	cx
@@ -30,8 +30,10 @@ lpf_fps_sos = signal.iirfilter(2, Wn=0.7, btype='lowpass', analog=False, ftype='
 slist = autoconnect_serial()
 ser = slist[0]
 
+
+
 # For webcam input:
-cap = cv2.VideoCapture(3)
+cap = cv2.VideoCapture(2)
 with mp_pose.Pose(
 	min_detection_confidence=0.5,
 	min_tracking_confidence=0.5) as pose:
@@ -62,6 +64,7 @@ with mp_pose.Pose(
 	# Load camera calibration data
 	try:
 		camera_matrix, dist_coeffs = load_camera_calibration('camera_calibration.json')
+		uth1, uth2 = load_robot_calibration('robot_calibration.json')
 		print("Successfully loaded camera calibration data")
 		print("fx = ", camera_matrix[0,0])
 		print("fy = ", camera_matrix[1,1])
@@ -134,21 +137,7 @@ with mp_pose.Pose(
 			# 	image_height
 			# )
 
-			# Convert pixel coordinates to real-world direction vector
-			direction_vector = pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix)
-			
-			# Print the direction vector
-			# print(f"Direction vector: {direction_vector}")
-			
-			# Use the direction vector for your application
-			x = -direction_vector[0]	#track sign inversion
-			y = -direction_vector[1]
-			z = direction_vector[2]
-			xr = x*math.cos(math.pi/4) - y*math.sin(math.pi/4)
-			yr = x*math.sin(math.pi/4) + y*math.cos(math.pi/4)
-			theta1_rad, theta2_rad = get_ik_angles_double(xr, yr, z)
-			theta1 = int(theta1_rad*2**14)
-			theta2 = int(theta2_rad*2**14)
+			theta1, theta2 = pixel_to_thetas(pixel_x, pixel_y, camera_matrix,q_offset=np.array([uth1, uth2]))
 			pld = create_sauron_position_payload(theta1, theta2)
 			ser.write(pld)
 
