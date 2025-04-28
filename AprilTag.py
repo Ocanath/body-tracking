@@ -149,10 +149,11 @@ def main():
         if toggle_print_pos:
             print(f"d={dvn},yaw={yaw_angle}")
 
+
         # Use the direction vector for your application
         x = -direction_vector[0] + x_offset	#track sign inversion
-        y = -(direction_vector[1] + 69.12e-3) + y_offset
-        z = (direction_vector[2] - 23.06e-3) + z_offset
+        y = -(direction_vector[1]) - 69.12e-3 + y_offset
+        z = direction_vector[2] + 23.06e-3 + z_offset
 
         
 

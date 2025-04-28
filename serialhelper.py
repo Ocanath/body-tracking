@@ -5,7 +5,7 @@ from serial.tools import list_ports
 from calibration_helper import pixel_to_direction_vector
 import math
 from sauron_ik import get_ik_angles_double
-
+import numpy as np
 
 def fletchers_checksum16(data: bytes) -> int:
     """Calculate Fletcher's checksum for 16-bit words"""
@@ -79,7 +79,16 @@ def autoconnect_serial():
 	print( "found ", len(slist), "ports.")
 	return slist
 
-def pixel_to_payload(pixel_x, pixel_y, camera_matrix, dist, g2c_offset, q_offset):
+
+"""
+This function takes in a pixel coordinate, a camera matrix, a distance, and a g2c offset.
+For a parallel vector result, set the distance to 1 and the g2c offset to 0. This is equivalent to
+an infinite distance to the target with a g2c offset corresponding to the correct camera position relative to the laser gimbal.
+
+If you have an accurate distance to the target, set dist equal to that distance and use the g2c offset from the robot itself; that should be
+
+"""
+def pixel_to_payload(pixel_x, pixel_y, camera_matrix, dist=1, g2c_offset=np.array([0, 0, 0]), q_offset=np.array([0, 0])):
 	direction_vector = pixel_to_direction_vector(pixel_x, pixel_y, camera_matrix)
 	direction_vector[0] = -direction_vector[0]# track sign inversion
 	direction_vector[1] = -direction_vector[1]

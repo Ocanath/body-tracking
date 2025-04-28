@@ -65,7 +65,7 @@ def main():
                       markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
                 
         try:
-            pld = pixel_to_payload(mouse_x, mouse_y, camera_matrix, target_distance, g2c_offset, [user_input_theta1_offset, user_input_theta2_offset])
+            pld = pixel_to_payload(mouse_x, mouse_y, camera_matrix, dist=target_distance, g2c_offset=g2c_offset, q_offset=[user_input_theta1_offset, user_input_theta2_offset])
             if len(slist) != 0:
                 slist[0].write(pld)
         except Exception as e:
