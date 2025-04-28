@@ -60,17 +60,17 @@ def main():
     detector = apriltag.Detector()
     
     # Open camera
-    cap = cv2.VideoCapture(3)  # Adjust this index if needed
+    cap = cv2.VideoCapture(2)  # Adjust this index if needed
     
     # Define tag size in meters (adjust this based on your actual tag size)
     tag_size = 0.07  # 7cm
     direction_vector = np.array([0, 0, 0])
-
+    yaw_angle = 0
     x_offset = 0
     y_offset = 0
     z_offset = 0
     toggle_print_pos = False
-    toggle_lock_thetas = False
+    toggle_lock_thetas = True
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -114,6 +114,11 @@ def main():
                 # Print the 3D position
                 # print(f"Tag {detection.tag_id} position (x,y,z): {tvec.flatten()}")
                 direction_vector = tvec.flatten()
+                # Convert rotation vector to rotation matrix
+                R, _ = cv2.Rodrigues(rvec)
+                # Extract yaw angle (rotation around z-axis)
+                yaw_angle = np.arctan2(R[1,0], R[0,0])  # This is the correct way to get horizontal rotation
+
                 # Draw the center point
                 cv2.circle(frame, tuple(center), 5, (0, 0, 255), -1)
                 
@@ -143,8 +148,9 @@ def main():
         x = -direction_vector[0] + x_offset	#track sign inversion
         y = -(direction_vector[1] + 69.12e-3) + y_offset
         z = (direction_vector[2] - 23.06e-3) + z_offset
+
         if toggle_print_pos:
-            print(x, y, z)
+            print(x, y, z, yaw_angle)
 
 
 
