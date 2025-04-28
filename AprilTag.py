@@ -78,6 +78,8 @@ def main():
             print("Failed to grab frame")
             break
         
+        # Undistort the image using calibration data
+        frame = cv2.undistort(frame, camera_matrix, dist_coeffs)
 
         # Convert to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
